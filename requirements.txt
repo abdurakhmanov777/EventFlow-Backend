@@ -1,0 +1,11 @@
+aiogram
+sqlalchemy
+aiosqlite
+loguru
+gspread
+pillow
+asyncpg
+fastapi
+uvicorn
+python-dotenv
+pymorphy3

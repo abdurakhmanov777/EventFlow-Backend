@@ -1,0 +1,83 @@
+{
+    "default": {
+        "text": {
+            "start": "<b>Multibot — a Telegram bot builder!</b>\n\n<blockquote>Create and set up a bot in just a few steps</blockquote>\n<blockquote>Enter the name and API key</blockquote>\n<blockquote>Start designing with an intuitive interface</blockquote>",
+            "settings": "<b>Select the desired setting</b>\n\n<i>Click the button to proceed</i>",
+            "lang": "<b>Select a language</b>\n\n<i>Click the button to change</i>",
+            "miniapp": "<b>MiniApp created</b>\n\n<i>Click the button to open it</i>",
+            "test": "<b>Test MiniApp has been created</b>\n\n<i>Click the button to open it</i>",
+            "url_app": "https://abdurakhmanov777.github.io/miniapp/",
+            "url_test": "https://lh7fk1md-5500.euw.devtunnels.ms/"
+        },
+        "keyboard": {
+            "start": [
+                [
+                    [
+                        "MiniApp",
+                        "miniapp"
+                    ]
+                ],
+                [
+                    [
+                        "Settings",
+                        "settings"
+                    ]
+                ]
+            ],
+            "settings": [
+                [
+                    [
+                        "System language",
+                        "lang"
+                    ]
+                ],
+                [
+                    [
+                        "Back",
+                        "start"
+                    ]
+                ]
+            ],
+            "miniapp": [
+                "Open MiniApp", "Back"
+            ],
+            "lang": [
+                [
+                    "Русский",
+                    "toggle_lang_ru"
+                ],
+                [
+                    "English",
+                    "toggle_lang_en"
+                ],
+                [
+                    "Back",
+                    "settings"
+                ]
+            ]
+        }
+    },
+    "template": {
+        "input": {
+            "start": [
+                "<b>Enter ",
+                "</b>\n\n<i>Format: ",
+                "</i>"
+            ],
+            "saved": [
+                "<b>",
+                ": ",
+                "</b>\n\n<i>To modify the data, enter it again</i>"
+            ],
+            "error": [
+                "<b>Invalid input data</b>\n\n<i>Format: ",
+                "</i>"
+            ],
+            "error_callback": "No information about "
+        },
+        "selection": [
+            "<b>Select ",
+            "</b>\n\n<i>Click on the required option</i>"
+        ]
+    }
+}
