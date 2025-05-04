@@ -29,7 +29,7 @@ async def update_language_data(event, data: dict) -> dict:
 
 
 
-class Middleware(BaseMiddleware):
+class MiddlewareCommand(BaseMiddleware):
     def __init__(self) -> None:
         self.counter = 0
 
@@ -50,6 +50,26 @@ class Middleware(BaseMiddleware):
             await event.delete()
         except Exception:
             pass
+
+        return result
+
+
+class MiddlewareMessage(BaseMiddleware):
+    def __init__(self) -> None:
+        self.counter = 0
+
+    async def __call__(
+        self,
+        handler: Callable[[types.Message, dict], Awaitable[Any]],
+        event: types.Message,
+        data: dict
+    ) -> Any:
+        self.counter += 1
+        data['counter'] = self.counter
+
+        await update_language_data(event, data)
+
+        result = await handler(event, data)
 
         return result
 

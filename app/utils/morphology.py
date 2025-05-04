@@ -14,56 +14,72 @@ CASES = {
     'предложный': 'loct'
 }
 
-def inflect_text(text: str, case: str) -> str:
+async def inflect_text(text: str, case: str) -> str:
     '''
     Изменяет падеж словосочетания/слова с именительного на выбранный,
-    сохраняя регистр каждой буквы.
+    сохраняя регистр каждой буквы. Учитывает число и корректный морфоанализ.
     '''
+    # Получаем код падежа по его строковому названию
     case_code = CASES.get(case)
     if not case_code:
         return f'Неизвестный падеж: {case}'
 
-    words = text.split()  # Разбиваем фразу на слова
-    parsed = [morph.parse(word)[0] for word in words]  # Разбираем каждое слово
+    # Выбирает наиболее подходящий разбор слова:
+    # в приоритете существительные и прилагательные в именительном падеже
+    def choose_best_parse(word):
+        parses = morph.parse(word)
+        for p in parses:
+            if 'NOUN' in p.tag and 'nomn' in p.tag:
+                return p
+            if 'ADJF' in p.tag and 'nomn' in p.tag:
+                return p
+        return parses[0]  # Если ничего не найдено — берем первый разбор
 
-    # Находим индекс первого существительного
+    words = text.split()  # Разбиваем фразу на отдельные слова
+    parsed = [choose_best_parse(word) for word in words]  # Морфологический разбор каждого слова
+
+    # Ищем индекс первого существительного (якоря согласования по числу)
     noun_index = next((i for i, p in enumerate(parsed) if 'NOUN' in p.tag), -1)
     if noun_index == -1:
-        return text  # Если нет существительного — возвращаем исходный текст
+        return text  # Если нет существительного — возвращаем оригинальный текст
 
-    noun_gender = parsed[noun_index].tag.gender  # Определяем род существительного
+    noun_number = parsed[noun_index].tag.number  # Определяем число (ед. или мн.) существительного
     result = []
 
+    # Функция для сохранения регистра букв (верхний/нижний) при замене слова
     def preserve_letter_case(original: str, new: str) -> str:
-        '''
-        Сохраняет регистр букв из оригинального слова в новом.
-        '''
         res = []
         for o, n in zip(original, new):
-            res.append(n.upper() if o.isupper() else n.lower())
-        # Добавляем символы, если новое слово длиннее
-        if len(new) > len(original):
+            res.append(n.upper() if o.isupper() else n.lower())  # Сохраняем регистр символов
+        if len(new) > len(original):  # Добавляем оставшиеся символы, если новое слово длиннее
             res.extend(new[len(original):])
         return ''.join(res)
 
     for i, (word, p) in enumerate(zip(words, parsed)):
-        # Склоняем существительное и прилагательные, согласованные по роду
+        # Решаем, нужно ли изменять это слово:
+        # изменяем существительное и прилагательные с тем же числом
         should_inflect = (
             i == noun_index or
-            ('ADJF' in p.tag and p.tag.gender == noun_gender)
+            ('ADJF' in p.tag and p.tag.number == noun_number)
         )
 
         if should_inflect:
-            inflected = p.inflect({case_code})  # Пытаемся склонить
+            tags_to_inflect = {case_code}  # Тег нужного падежа
+            if noun_number:
+                tags_to_inflect.add(noun_number)  # Добавляем тег числа (если есть)
+
+            inflected = p.inflect(tags_to_inflect)  # Пробуем склонить слово
             new_word = inflected.word if inflected else word  # Если не получилось — оставляем как есть
-            result.append(preserve_letter_case(word, new_word))
+            result.append(preserve_letter_case(word, new_word))  # Сохраняем регистр
         else:
-            result.append(word)  # Остальные слова не изменяются
+            result.append(word)  # Оставляем слово без изменений
 
-    return ' '.join(result)  # Собираем результат обратно в строку
+    return ' '.join(result)  # Собираем и возвращаем итоговую строку
 
 
-def fix_preposition_o(text: str) -> str:
+
+
+async def fix_preposition_o(text: str) -> str:
     '''
     Заменяет предлог "о" на "об" перед словами, начинающимися на гласную букву.
     '''

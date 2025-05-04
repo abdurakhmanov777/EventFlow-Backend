@@ -3,7 +3,8 @@ from aiogram import Bot, Dispatcher
 from loguru import logger
 from app.routers.commands import router as commands
 from app.routers.callback import router as callback
-from app.middlewares.middlewares import Middleware, MiddlewareCallback
+from app.routers.messages import router as messages
+from app.middlewares.middlewares import MiddlewareCommand, MiddlewareMessage, MiddlewareCallback
 
 from aiogram.fsm.storage.memory import SimpleEventIsolation
 from app.modules.multibot.polling_manager import PollingManager
@@ -32,11 +33,14 @@ async def on_shutdown(bots: List[Bot]):
 def init_routers() -> Dispatcher:
     dp = Dispatcher(events_isolation=SimpleEventIsolation())
 
-    commands.message.middleware(Middleware())
+    commands.message.middleware(MiddlewareCommand())
+    messages.message.middleware(MiddlewareMessage())
     callback.callback_query.middleware(MiddlewareCallback())
+
     dp.include_router(commands)
     dp.include_router(callback)
-    # commands.message.middleware(LocalizationMiddleware())
+    dp.include_router(messages)
+
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
 

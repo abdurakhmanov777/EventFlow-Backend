@@ -11,10 +11,7 @@ from aiogram.utils.token import TokenValidationError
 from aiogram.fsm.context import FSMContext
 
 from app.modules.multibot.polling_manager import PollingManager
-import app.utils.localization as loc
 import app.database.requests as rq
-from app.fsm.fsm_class import LangState
-
 import app.functions.keyboards as kb
 
 router = Router()
@@ -106,7 +103,7 @@ async def start(message: types.Message, state: FSMContext):
         logger.exception(f'start ({user_id}, {username}) {error})')
 
 
-@router.message(Command("addbot"))
+@router.message(Command('addbot'))
 async def cmd_start(message: types.Message, command: CommandObject,
     dp_for_new_bot: Dispatcher,
     polling_manager: PollingManager):
@@ -115,7 +112,7 @@ async def cmd_start(message: types.Message, command: CommandObject,
             bot = Bot(command.args)
 
             if bot.id in polling_manager.polling_tasks:
-                await message.answer("Bot with this id already running")
+                await message.answer('Bot with this id already running')
                 return
 
 
@@ -128,25 +125,25 @@ async def cmd_start(message: types.Message, command: CommandObject,
             )
             bot_user = await bot.get_me()
             # evbots.init_bot(bot, bot_user.username) # добавляешь в БД
-            await message.answer(f"New bot started: @{bot_user.username}")
+            await message.answer(f'New bot started: @{bot_user.username}')
         except (TokenValidationError, TelegramUnauthorizedError) as err:
-            await message.answer(fmt.quote(f"{type(err).__name__}: {str(err)}"))
+            await message.answer(fmt.quote(f'{type(err).__name__}: {str(err)}'))
     else:
-        await message.answer("Please provide token")
+        await message.answer('Please provide token')
 
 
-@router.message(Command("stopbot"))
+@router.message(Command('stopbot'))
 async def cmd_start(message: types.Message, command: CommandObject, polling_manager: PollingManager,):
 
     if command.args:
         try:
             polling_manager.stop_bot_polling(int(command.args))
             # evbots.delete_bot(int(command.args)) # удаляешь из бд
-            await message.answer("Bot stopped")
+            await message.answer('Bot stopped')
         except (ValueError, KeyError) as err:
-            await message.answer(fmt.quote(f"{type(err).__name__}: {str(err)}"))
+            await message.answer(fmt.quote(f'{type(err).__name__}: {str(err)}'))
     else:
-        await message.answer("Please provide bot id")
+        await message.answer('Please provide bot id')
 
 
 
@@ -161,9 +158,3 @@ async def change_language_handler(message: types.Message, state: FSMContext):
         logger.info(f'start ({user_id}, {username})')
     except Exception as error:
         logger.exception(f'start ({user_id}, {username}) {error})')
-
-
-
-@router.message()
-async def other(message: types.Message):
-    pass
