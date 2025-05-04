@@ -1,7 +1,5 @@
 **/__pycache__/
-.env
-env
-1.py
-main copy.py
-db.sqlite3
+**/env/
 **/logs/
+.env
+db.sqlite3

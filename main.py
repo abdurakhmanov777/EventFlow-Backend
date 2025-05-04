@@ -10,6 +10,7 @@ from init_logger import LoguruLoggingMiddleware, logger
 from app.database.requests import get_bots_startup
 from config import BOT_TOKEN
 
+
 async def main():
     try:
         await async_main()
@@ -40,9 +41,19 @@ async def main():
             dp.start_polling(*bots, dp_for_new_bot=dp, polling_manager=polling_manager),
             server.serve()  # Запуск FastAPI
         )
-    except Exception as error:
-        print(error)
-        logger.debug('Бот отключен')
 
-if __name__ == '__main__':
-    asyncio.run(main())
+    except asyncio.CancelledError:
+        logger.debug("Операция была отменена (например, по Ctrl+C)")
+    except KeyboardInterrupt:
+        logger.debug("Получен сигнал KeyboardInterrupt (Ctrl+C)")
+    except Exception as e:
+        logger.error(f"Необработанная ошибка: {e}")
+    finally:
+        logger.debug("Бот отключен")
+
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.debug("Главный цикл прерван (KeyboardInterrupt)")
