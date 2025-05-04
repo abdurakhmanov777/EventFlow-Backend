@@ -4,3 +4,4 @@ env
 1.py
 main copy.py
 db.sqlite3
+logs
