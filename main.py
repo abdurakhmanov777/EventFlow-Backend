@@ -10,6 +10,16 @@ from init_logger import LoguruLoggingMiddleware, logger
 from app.database.requests import get_bots_startup
 from config import BOT_TOKEN
 
+from aiogram import Bot
+from aiogram.types import BotCommand
+
+async def set_bot_commands(bot: Bot):
+    commands = [
+        BotCommand(command="start", description="Запуск/перезапуск бота"),
+        BotCommand(command="help", description="Техническая поддержка"),
+    ]
+    await bot.set_my_commands(commands)
+
 
 async def main():
     try:
@@ -19,7 +29,12 @@ async def main():
         dp, polling_manager = init_routers()
         app = init_routers_api()
 
-        for bot in bots:
+        # Только для основного бота
+        await bots[0].get_updates(offset=-1)
+        await set_bot_commands(bots[0])
+
+        # Для остальных ботов только сбрасываем апдейты
+        for bot in bots[1:]:
             await bot.get_updates(offset=-1)
 
         # Отключаем стандартный логгер FastAPI
@@ -33,13 +48,12 @@ async def main():
         logger.debug('Бот включен')
 
         # Запуск FastAPI
-        config = uvicorn.Config(app, host='0.0.0.0', port=8000, log_level='critical')  # Отключаем стандартные логи через uvicorn
+        config = uvicorn.Config(app, host='0.0.0.0', port=8000, log_level='critical')
         server = uvicorn.Server(config)
 
-        # Запуск бота и FastAPI вместе
         await asyncio.gather(
             dp.start_polling(*bots, dp_for_new_bot=dp, polling_manager=polling_manager),
-            server.serve()  # Запуск FastAPI
+            server.serve()
         )
 
     except asyncio.CancelledError:
@@ -50,6 +64,7 @@ async def main():
         logger.error(f"Необработанная ошибка: {e}")
     finally:
         logger.debug("Бот отключен")
+
 
 
 if __name__ == "__main__":

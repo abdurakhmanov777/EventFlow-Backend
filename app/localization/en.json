@@ -2,6 +2,7 @@
     "default": {
         "text": {
             "start": "<b>EventFlow — a Telegram bot builder!</b>\n\n<blockquote>Create and set up a bot in just a few steps</blockquote>\n<blockquote>Enter the name and API key</blockquote>\n<blockquote>Start designing with an intuitive interface</blockquote>",
+            "help": "<b>Application Administrator Contact</b>\n\n<i>Ask a question or report a problem</i>",
             "settings": "<b>Select the desired setting</b>\n\n<i>Click the button to proceed</i>",
             "lang": "<b>Select a language</b>\n\n<i>Click the button to change</i>",
             "miniapp": "<b>MiniApp created</b>\n\n<i>Click the button to open it</i>",

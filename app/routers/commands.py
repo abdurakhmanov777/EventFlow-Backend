@@ -34,7 +34,25 @@ async def start(message: types.Message, state: FSMContext):
         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
         logger.info(f'start ({user_id}, {username})')
     except Exception as error:
-        logger.exception(f'start ({user_id}, {username}) {error})')
+        logger.error(f'start ({user_id}, {username}) {error})')
+
+
+@router.message(Command('help'))
+async def help(message: types.Message, state: FSMContext):
+    user_id = message.from_user.id
+    username = message.from_user.username
+    try:
+        user_data = await state.get_data()
+        loc = user_data.get('loc')
+
+        start_text = loc.default.text.help
+        keyboard = kb.help
+
+        await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
+        logger.info(f'start ({user_id}, {username})')
+    except Exception as error:
+        logger.error(f'start ({user_id}, {username}) {error})')
+
 
 @router.message(Command('start'))
 async def start(message: types.Message, state: FSMContext):
@@ -52,7 +70,7 @@ async def start(message: types.Message, state: FSMContext):
         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
         logger.info(f'start ({user_id}, {username})')
     except Exception as error:
-        logger.exception(f'start ({user_id}, {username}) {error})')
+        logger.error(f'start ({user_id}, {username}) {error})')
 
 @router.message(Command('miniapp'))
 async def start(message: types.Message, state: FSMContext):
@@ -74,7 +92,7 @@ async def start(message: types.Message, state: FSMContext):
         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
         logger.info(f'start ({user_id}, {username})')
     except Exception as error:
-        logger.exception(f'start ({user_id}, {username}) {error})')
+        logger.error(f'start ({user_id}, {username}) {error})')
 
 @router.message(Command('gg'))
 async def start(message: types.Message, state: FSMContext):
@@ -100,7 +118,7 @@ async def start(message: types.Message, state: FSMContext):
         await message.answer(text=text, parse_mode='HTML')
         logger.info(f'test ({user_id}, {username})')
     except Exception as error:
-        logger.exception(f'start ({user_id}, {username}) {error})')
+        logger.error(f'start ({user_id}, {username}) {error})')
 
 
 @router.message(Command('addbot'))
@@ -157,4 +175,4 @@ async def change_language_handler(message: types.Message, state: FSMContext):
         await rq.user_update(user_id, 'lang', lang)
         logger.info(f'start ({user_id}, {username})')
     except Exception as error:
-        logger.exception(f'start ({user_id}, {username}) {error})')
+        logger.error(f'start ({user_id}, {username}) {error})')

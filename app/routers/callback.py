@@ -9,6 +9,19 @@ from app.utils.localization import load_localization
 
 router = Router()
 
+
+
+@router.callback_query(F.data == 'delete')
+async def message_delete(callback: types.CallbackQuery):
+    user_id = callback.from_user.id
+    username = callback.from_user.username
+    try:
+        await callback.message.delete()
+        logger.info(f'start ({user_id}, {username})')
+    except Exception as error:
+        logger.error(f'start ({user_id}, {username}) {error})')
+
+
 def list_main_commands(callback: types.CallbackQuery):
     list_callback_data = [
         'start',
@@ -34,9 +47,9 @@ async def main_commands(callback: types.CallbackQuery, state: FSMContext):
 
         keyboard = await kb.keyboard(getattr(loc.default.keyboard, key))
         await callback.message.edit_text(text=text, parse_mode='HTML', reply_markup=keyboard)
-        logger.info(f'start ({user_id}, {username})')
+        logger.info(f'main_commands ({user_id}, {username})')
     except Exception as error:
-        logger.exception(f'start ({user_id}, {username}) {error})')
+        logger.error(f'start ({user_id}, {username}) {error})')
 
 @router.callback_query(F.data == 'lang')
 async def toggle_check(callback: types.CallbackQuery, state: FSMContext):
@@ -57,7 +70,7 @@ async def toggle_check(callback: types.CallbackQuery, state: FSMContext):
         await callback.message.edit_text(text=text, parse_mode='HTML', reply_markup=keyboard)
         logger.info(f'start ({user_id}, {username})')
     except Exception as error:
-        logger.exception(f'start ({user_id}, {username}) {error})')
+        logger.error(f'start ({user_id}, {username}) {error})')
 
 
 

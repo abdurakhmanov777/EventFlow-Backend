@@ -2,6 +2,10 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 none = InlineKeyboardMarkup(inline_keyboard=[])
 
+help = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text = 'Администратор бота', url = 'tg://user?id=1645736584')],
+    [InlineKeyboardButton(text = 'Закрыть окно', callback_data='delete')]
+])
 
 async def keyboard(data: list[list[list[str]]]) -> InlineKeyboardMarkup:
     '''Создает InlineKeyboardMarkup из вложенного списка.'''
