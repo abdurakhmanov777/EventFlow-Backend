@@ -1,14 +1,12 @@
-import os
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
-from loguru import logger
 
 import app.functions.keyboards as kb
 import app.database.requests as rq
 from app.utils.localization import load_localization
+from app.utils.logging import log
 
 router = Router()
-
 
 
 @router.callback_query(F.data == 'delete')
@@ -17,9 +15,10 @@ async def message_delete(callback: types.CallbackQuery):
     username = callback.from_user.username
     try:
         await callback.message.delete()
-        logger.info(f'start ({user_id}, {username})')
+
+        log(user_id, username)
     except Exception as error:
-        logger.error(f'start ({user_id}, {username}) {error})')
+        log(user_id, username, error=error)
 
 
 def list_main_commands(callback: types.CallbackQuery):
@@ -39,17 +38,17 @@ async def main_commands(callback: types.CallbackQuery, state: FSMContext):
 
     try:
         user_data = await state.get_data()
-        # await callback.answer(user_data.get('lang'), show_alert=True)
         loc = user_data.get('loc')
         key = callback.data
         text = getattr(loc.default.text, key)
 
-
         keyboard = await kb.keyboard(getattr(loc.default.keyboard, key))
         await callback.message.edit_text(text=text, parse_mode='HTML', reply_markup=keyboard)
-        logger.info(f'main_commands ({user_id}, {username})')
+
+        log(user_id, username)
     except Exception as error:
-        logger.error(f'start ({user_id}, {username}) {error})')
+        log(user_id, username, error=error)
+
 
 @router.callback_query(F.data == 'lang')
 async def toggle_check(callback: types.CallbackQuery, state: FSMContext):
@@ -68,9 +67,10 @@ async def toggle_check(callback: types.CallbackQuery, state: FSMContext):
             f'toggle_{callback.data}_{user_data.get(callback.data)}'
         )
         await callback.message.edit_text(text=text, parse_mode='HTML', reply_markup=keyboard)
-        logger.info(f'start ({user_id}, {username})')
+
+        log(user_id, username)
     except Exception as error:
-        logger.error(f'start ({user_id}, {username}) {error})')
+        log(user_id, username, error=error)
 
 
 
@@ -109,9 +109,10 @@ async def toggle(callback: types.CallbackQuery, state: FSMContext):
             await rq.user_update(user_id, data[1], data[2])
         except:
             print(111)
-        logger.info(f'start ({user_id}, {username})')
+
+        log(user_id, username)
     except Exception as error:
-        logger.exception(f'start ({user_id}, {username}) {error})')
+        log(user_id, username, error=error)
 
 @router.callback_query(F.data == 'miniapp')
 async def miniapp(callback: types.CallbackQuery, state: FSMContext):
@@ -127,6 +128,7 @@ async def miniapp(callback: types.CallbackQuery, state: FSMContext):
             loc.default.keyboard.miniapp
         )
         await callback.message.edit_text(text=text, parse_mode='HTML', reply_markup=keyboard)
-        logger.info(f'start ({user_id}, {username})')
+
+        log(user_id, username)
     except Exception as error:
-        logger.exception(f'start ({user_id}, {username}) {error})')
+        log(user_id, username, error=error)

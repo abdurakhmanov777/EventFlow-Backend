@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 import app.database.requests as rq
 import app.functions.keyboards as kb
 
+from app.utils.logging import log
 from app.utils.morphology import inflect_text, fix_preposition_o
 
 # phrase = 'пальто'
@@ -19,7 +20,7 @@ from app.utils.morphology import inflect_text, fix_preposition_o
 router = Router()
 
 @router.message()
-async def handle_contact(message: types.Message, state: FSMContext):
+async def ckeck(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     username = message.from_user.username
     try:
@@ -31,9 +32,10 @@ async def handle_contact(message: types.Message, state: FSMContext):
         else:
             text = 'Неверный ввод'
         await message.answer(text)
-        logger.info(f'start ({user_id}, {username})')
+
+        log(user_id, username)
     except Exception as error:
-        logger.exception(f'start ({user_id}, {username}) {error})')
+        log(user_id, username, error=error)
 
 
 @router.message()

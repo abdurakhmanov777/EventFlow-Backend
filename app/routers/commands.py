@@ -2,7 +2,6 @@ import re
 from aiogram import Bot, Dispatcher, Router
 from aiogram.filters import Command
 # from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
-from loguru import logger
 from aiogram import types
 from aiogram.filters import Command, CommandObject
 from aiogram.exceptions import TelegramUnauthorizedError
@@ -13,6 +12,7 @@ from aiogram.fsm.context import FSMContext
 from app.modules.multibot.polling_manager import PollingManager
 import app.database.requests as rq
 import app.functions.keyboards as kb
+from app.utils.logging import log
 
 router = Router()
 
@@ -32,9 +32,10 @@ async def start(message: types.Message, state: FSMContext):
         )
 
         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
-        logger.info(f'start ({user_id}, {username})')
+
+        log(user_id, username)
     except Exception as error:
-        logger.error(f'start ({user_id}, {username}) {error})')
+        log(user_id, username, error=error)
 
 
 @router.message(Command('help'))
@@ -49,9 +50,10 @@ async def help(message: types.Message, state: FSMContext):
         keyboard = kb.help
 
         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
-        logger.info(f'start ({user_id}, {username})')
+
+        log(user_id, username)
     except Exception as error:
-        logger.error(f'start ({user_id}, {username}) {error})')
+        log(user_id, username, error=error)
 
 
 @router.message(Command('start'))
@@ -68,12 +70,13 @@ async def start(message: types.Message, state: FSMContext):
         keyboard = await kb.keyboard(loc.default.keyboard.start)
 
         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
-        logger.info(f'start ({user_id}, {username})')
+
+        log(user_id, username)
     except Exception as error:
-        logger.error(f'start ({user_id}, {username}) {error})')
+        log(user_id, username, error=error)
 
 @router.message(Command('miniapp'))
-async def start(message: types.Message, state: FSMContext):
+async def miniapp(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     username = message.from_user.username
     try:
@@ -90,9 +93,10 @@ async def start(message: types.Message, state: FSMContext):
         )
 
         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
-        logger.info(f'start ({user_id}, {username})')
+
+        log(user_id, username)
     except Exception as error:
-        logger.error(f'start ({user_id}, {username}) {error})')
+        log(user_id, username, error=error)
 
 @router.message(Command('gg'))
 async def start(message: types.Message, state: FSMContext):
@@ -116,9 +120,10 @@ async def start(message: types.Message, state: FSMContext):
         text = f'{parts_text[0]}{name}{parts_text[1]}{value}{parts_text[2]}'
 
         await message.answer(text=text, parse_mode='HTML')
-        logger.info(f'test ({user_id}, {username})')
+
+        log(user_id, username)
     except Exception as error:
-        logger.error(f'start ({user_id}, {username}) {error})')
+        log(user_id, username, error=error)
 
 
 @router.message(Command('addbot'))
@@ -162,17 +167,3 @@ async def cmd_start(message: types.Message, command: CommandObject, polling_mana
             await message.answer(fmt.quote(f'{type(err).__name__}: {str(err)}'))
     else:
         await message.answer('Please provide bot id')
-
-
-
-@router.message(Command(re.compile(r'^(ru|en|zv)$')))
-async def change_language_handler(message: types.Message, state: FSMContext):
-    user_id = message.from_user.id
-    username = message.from_user.username
-    lang = message.text[1:]
-    try:
-        await state.update_data(lang=lang)
-        await rq.user_update(user_id, 'lang', lang)
-        logger.info(f'start ({user_id}, {username})')
-    except Exception as error:
-        logger.error(f'start ({user_id}, {username}) {error})')
