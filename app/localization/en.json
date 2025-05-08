@@ -39,9 +39,6 @@
                     ]
                 ]
             ],
-            "miniapp": [
-                "Open MiniApp", "Back"
-            ],
             "lang": [
                 [
                     "Русский",
@@ -55,6 +52,12 @@
                     "Back",
                     "settings"
                 ]
+            ],
+            "miniapp": [
+                "Open MiniApp", "Back"
+            ],
+            "help": [
+                "Bot Administrator", "Close Window"
             ]
         }
     },

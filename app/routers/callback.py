@@ -10,15 +10,13 @@ router = Router()
 
 
 @router.callback_query(F.data == 'delete')
-async def message_delete(callback: types.CallbackQuery):
-    user_id = callback.from_user.id
-    username = callback.from_user.username
+async def delete(callback: types.CallbackQuery):
     try:
         await callback.message.delete()
 
-        log(user_id, username)
+        await log(callback)
     except Exception as error:
-        log(user_id, username, error=error)
+        await log(callback, error=error)
 
 
 def list_main_commands(callback: types.CallbackQuery):
@@ -32,10 +30,7 @@ def list_main_commands(callback: types.CallbackQuery):
 
 
 @router.callback_query(list_main_commands)
-async def main_commands(callback: types.CallbackQuery, state: FSMContext):
-    user_id = callback.from_user.id
-    username = callback.from_user.username
-
+async def main(callback: types.CallbackQuery, state: FSMContext):
     try:
         user_data = await state.get_data()
         loc = user_data.get('loc')
@@ -45,16 +40,13 @@ async def main_commands(callback: types.CallbackQuery, state: FSMContext):
         keyboard = await kb.keyboard(getattr(loc.default.keyboard, key))
         await callback.message.edit_text(text=text, parse_mode='HTML', reply_markup=keyboard)
 
-        log(user_id, username)
+        await log(callback)
     except Exception as error:
-        log(user_id, username, error=error)
+        await log(callback, error=error)
 
 
 @router.callback_query(F.data == 'lang')
-async def toggle_check(callback: types.CallbackQuery, state: FSMContext):
-    user_id = callback.from_user.id
-    username = callback.from_user.username
-
+async def toggle(callback: types.CallbackQuery, state: FSMContext):
     try:
         user_data = await state.get_data()
 
@@ -68,9 +60,9 @@ async def toggle_check(callback: types.CallbackQuery, state: FSMContext):
         )
         await callback.message.edit_text(text=text, parse_mode='HTML', reply_markup=keyboard)
 
-        log(user_id, username)
+        await log(callback)
     except Exception as error:
-        log(user_id, username, error=error)
+        await log(callback, error=error)
 
 
 
@@ -82,9 +74,6 @@ def toggle_check(callback: types.CallbackQuery):
 
 @router.callback_query(toggle_check)
 async def toggle(callback: types.CallbackQuery, state: FSMContext):
-    user_id = callback.from_user.id
-    username = callback.from_user.username
-
     await callback.answer()
     try:
         data = (callback.data).split('_')
@@ -106,18 +95,16 @@ async def toggle(callback: types.CallbackQuery, state: FSMContext):
             await callback.message.edit_text(text=text, parse_mode='HTML', reply_markup=keyboard)
             # await state.update_data(lang=data[2])
             await state.update_data(**{data[1]: data[2]})
-            await rq.user_update(user_id, data[1], data[2])
+            await rq.user_update(callback.from_user.id, data[1], data[2])
         except:
             print(111)
 
-        log(user_id, username)
+        await log(callback)
     except Exception as error:
-        log(user_id, username, error=error)
+        await log(callback, error=error)
 
 @router.callback_query(F.data == 'miniapp')
 async def miniapp(callback: types.CallbackQuery, state: FSMContext):
-    user_id = callback.from_user.id
-    username = callback.from_user.username
     try:
         user_data = await state.get_data()
         loc = user_data.get('loc')
@@ -129,6 +116,6 @@ async def miniapp(callback: types.CallbackQuery, state: FSMContext):
         )
         await callback.message.edit_text(text=text, parse_mode='HTML', reply_markup=keyboard)
 
-        log(user_id, username)
+        await log(callback)
     except Exception as error:
-        log(user_id, username, error=error)
+        await log(callback, error=error)

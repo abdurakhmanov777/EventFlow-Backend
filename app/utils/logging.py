@@ -1,24 +1,19 @@
-import inspect
+import sys
 import traceback
+from pathlib import Path
 from loguru import logger
 
+async def log(event, error=None, info=None):
+    user_id = event.from_user.id
+    username = event.from_user.username
+    frame = sys._getframe(1)
+    func_name = frame.f_code.co_name
+    filename = Path(frame.f_code.co_filename).name
 
-def log(user_id, username, error=None, info=None):
-    frame = inspect.currentframe().f_back
-    func = frame.f_code
-
-    # Обрезаем путь до "app"
-    def shorten(path):
-        return path[path.find('app'):] if 'app' in path else path
-
-    filename = shorten(func.co_filename)
-
-    # Если ошибка передана, получаем ее точное местоположение
     if error:
         tb = traceback.extract_tb(error.__traceback__)[-1]
-        log_message = f'{func.co_name} [{filename}:{tb.lineno}] ERROR: {error} ({user_id}, {username})'
+        message = f"{func_name} [{filename}:{tb.lineno}] ERROR: {error} ({user_id}, {username})"
+        logger.error(message)
     else:
-        lineno = frame.f_lineno
-        log_message = f'{func.co_name} [{filename}:{lineno}] {f"({info}) " if info else ""}({user_id}, {username})'
-
-    (logger.error if error else logger.info)(log_message)
+        message = f"{func_name} [{filename}:{frame.f_lineno}] {f'({info}) ' if info else ''}({user_id}, {username})"
+        logger.info(message)

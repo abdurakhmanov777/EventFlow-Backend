@@ -21,8 +21,6 @@ router = Router()
 
 @router.message()
 async def ckeck(message: types.Message, state: FSMContext):
-    user_id = message.from_user.id
-    username = message.from_user.username
     try:
         mas = (message.text).split('\n')
         if len(mas) == 2:
@@ -33,9 +31,9 @@ async def ckeck(message: types.Message, state: FSMContext):
             text = 'Неверный ввод'
         await message.answer(text)
 
-        log(user_id, username)
+        await log(message)
     except Exception as error:
-        log(user_id, username, error=error)
+        await log(message, error=error)
 
 
 @router.message()

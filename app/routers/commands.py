@@ -19,8 +19,6 @@ router = Router()
 
 @router.message(Command('test'))
 async def start(message: types.Message, state: FSMContext):
-    user_id = message.from_user.id
-    username = message.from_user.username
     try:
         user_data = await state.get_data()
         loc = user_data.get('loc')
@@ -33,33 +31,29 @@ async def start(message: types.Message, state: FSMContext):
 
         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
 
-        log(user_id, username)
+        await log(message)
     except Exception as error:
-        log(user_id, username, error=error)
+        await log(message, error=error)
 
 
 @router.message(Command('help'))
 async def help(message: types.Message, state: FSMContext):
-    user_id = message.from_user.id
-    username = message.from_user.username
     try:
         user_data = await state.get_data()
         loc = user_data.get('loc')
 
         start_text = loc.default.text.help
-        keyboard = kb.help
+        keyboard = await kb.help(loc.default.keyboard.help)
 
         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
 
-        log(user_id, username)
+        await log(message)
     except Exception as error:
-        log(user_id, username, error=error)
+        await log(message, error=error)
 
 
 @router.message(Command('start'))
 async def start(message: types.Message, state: FSMContext):
-    user_id = message.from_user.id
-    username = message.from_user.username
     try:
         user_data = await state.get_data()
         loc = user_data.get('loc')
@@ -71,14 +65,12 @@ async def start(message: types.Message, state: FSMContext):
 
         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
 
-        log(user_id, username)
+        await log(message)
     except Exception as error:
-        log(user_id, username, error=error)
+        await log(message, error=error)
 
 @router.message(Command('miniapp'))
 async def miniapp(message: types.Message, state: FSMContext):
-    user_id = message.from_user.id
-    username = message.from_user.username
     try:
         user_data = await state.get_data()
         loc = user_data.get('loc')
@@ -94,14 +86,12 @@ async def miniapp(message: types.Message, state: FSMContext):
 
         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
 
-        log(user_id, username)
+        await log(message)
     except Exception as error:
-        log(user_id, username, error=error)
+        await log(message, error=error)
 
 @router.message(Command('gg'))
 async def start(message: types.Message, state: FSMContext):
-    user_id = message.from_user.id
-    username = message.from_user.username
     try:
         user_data = await state.get_data()
         loc = user_data.get('loc')
@@ -121,9 +111,9 @@ async def start(message: types.Message, state: FSMContext):
 
         await message.answer(text=text, parse_mode='HTML')
 
-        log(user_id, username)
+        await log(message)
     except Exception as error:
-        log(user_id, username, error=error)
+        await log(message, error=error)
 
 
 @router.message(Command('addbot'))
