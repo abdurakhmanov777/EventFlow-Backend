@@ -2,37 +2,40 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 none = InlineKeyboardMarkup(inline_keyboard=[])
 
-async def help(data: list):
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text = data[0], url = 'tg://user?id=1645736584')],
-        [InlineKeyboardButton(text = data[1], callback_data='delete')]
-    ])
+
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
+
+async def keyboard_dymanic(data: list[list[list[str]]]) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=txt,
+                    url=rest[0] if typ == 'url' and rest else None,
+                    web_app=WebAppInfo(url=rest[0]) if typ == 'webapp' and rest else None,
+                    callback_data=None if typ in ['url', 'webapp'] else typ
+                )
+                for txt, typ, *rest in row
+            ]
+            for row in data
+        ]
+    )
+
 
 async def keyboard(data: list[list[list[str]]]) -> InlineKeyboardMarkup:
-    '''Создает InlineKeyboardMarkup из вложенного списка.'''
-    keyboard_buttons = [
-        [
-            InlineKeyboardButton(
-                text=item[0],
-                callback_data=item[1]
-            )
-            for item in row
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=txt,
+                    callback_data=typ
+                )
+                for txt, typ in row
+            ]
+            for row in data
         ]
-        for row in data
-    ]
-    keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
-    return keyboard
+    )
 
-
-async def miniapp(url_app: str, data: list) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(
-            text=data[0], web_app=WebAppInfo(url=url_app)
-        )],
-        [InlineKeyboardButton(
-            text=data[1], callback_data='start'
-        )]
-    ])
 
 
 async def toggle(data: list, flag: str) -> InlineKeyboardMarkup:
@@ -44,7 +47,7 @@ async def toggle(data: list, flag: str) -> InlineKeyboardMarkup:
         value = item[1]
 
         if value == flag:
-            text = f"{label} ✓"
+            text = f'{label} ✓'
         else:
             text = label
 

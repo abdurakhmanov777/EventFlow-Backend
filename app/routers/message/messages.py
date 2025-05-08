@@ -10,14 +10,9 @@ import app.functions.keyboards as kb
 from app.utils.logging import log
 from app.utils.morphology import inflect_text, fix_preposition_o
 
-# phrase = 'пальто'
-# case = 'предложный'
-# text = 'Нет информации о '
-# if __name__ == '__main__':
-#     result = text + inflect_text(phrase, case)
-#     print(fix_preposition_o(result))
 
 router = Router()
+
 
 @router.message()
 async def ckeck(message: types.Message, state: FSMContext):

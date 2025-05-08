@@ -6,7 +6,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.context import FSMContext
 from fastapi import Depends
 
-from app.modules.multibot.polling_manager import PollingManager
+from app.modules.polling_manager import PollingManager
 import app.database.requests as rq
 from config import BOT_TOKEN
 

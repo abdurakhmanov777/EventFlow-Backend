@@ -1,115 +1,35 @@
-from aiogram import Bot, Dispatcher, Router
-from aiogram.filters import Command
-# from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
-from aiogram import types
+from aiogram import Bot, Dispatcher, Router, types
 from aiogram.filters import Command, CommandObject
 from aiogram.exceptions import TelegramUnauthorizedError
+from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import html_decoration as fmt
 from aiogram.utils.token import TokenValidationError
-from aiogram.fsm.context import FSMContext
 
 from app.modules.polling_manager import PollingManager
-import app.database.requests as rq
-import app.functions.keyboards as kb
+from app.routers.config import COMMAND_MAIN
+from app.functions import keyboards as kb
+from app.database import requests as rq
 from app.utils.logging import log
 
 router = Router()
 
 
-# Настройки для команд
-COMMANDS_CONFIG = {
-    'start': 'start',
-    'help': 'help',
-    'test': 'test',
-}
-
-
-@router.message(Command(*COMMANDS_CONFIG.keys()))
+@router.message(Command(*COMMAND_MAIN))
 async def main(message: types.Message, state: FSMContext):
     try:
+        key = message.text.lstrip('/').split()[0]
         loc = (await state.get_data()).get('loc')
-        command = message.text.lstrip('/').split()[0]
-        key = COMMANDS_CONFIG[command]
 
         text = getattr(loc.default.text, key)
-        keyboard_data = getattr(loc.default.keyboard, key)
-        keyboard = await kb.keyboard_dymanic(keyboard_data)
+        keyboard = await kb.keyboard_dymanic(getattr(loc.default.keyboard, key))
 
         await message.answer(text=text, parse_mode='HTML', reply_markup=keyboard)
-        await log(message)
 
+        await log(message)
     except Exception as error:
         await log(message, error=error)
 
 
-# @router.message(Command('test'))
-# async def start(message: types.Message, state: FSMContext):
-#     try:
-#         loc = (await state.get_data()).get('loc')
-
-#         start_text = loc.default.text.test
-#         keyboard = await kb.miniapp(
-#             loc.default.text.url_test,
-#             loc.default.keyboard.miniapp
-#         )
-
-#         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
-
-#         await log(message)
-#     except Exception as error:
-#         await log(message, error=error)
-
-
-# @router.message(Command('help'))
-# async def help(message: types.Message, state: FSMContext):
-#     try:
-#         loc = (await state.get_data()).get('loc')
-
-#         start_text = loc.default.text.help
-#         keyboard = await kb.help(loc.default.keyboard.help)
-
-#         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
-
-#         await log(message)
-#     except Exception as error:
-#         await log(message, error=error)
-
-
-# @router.message(Command('start'))
-# async def start(message: types.Message, state: FSMContext):
-#     try:
-#         loc = (await state.get_data()).get('loc')
-
-#         start_text = loc.default.text.start
-#         url_app = loc.default.text.url_app
-
-#         keyboard = await kb.keyboard(loc.default.keyboard.start)
-
-#         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
-
-#         await log(message)
-#     except Exception as error:
-#         await log(message, error=error)
-
-# @router.message(Command('miniapp'))
-# async def miniapp(message: types.Message, state: FSMContext):
-#     try:
-#         loc = (await state.get_data()).get('loc')
-
-#         start_text = loc.default.text.start
-#         url_app = loc.default.text.url_app
-
-#         keyboard = types.InlineKeyboardMarkup(
-#             inline_keyboard=[[types.InlineKeyboardButton(
-#                 text='WebApp', web_app=types.WebAppInfo(url=url_app)
-#             )]]
-#         )
-
-#         await message.answer(text=start_text, parse_mode='HTML', reply_markup=keyboard)
-
-#         await log(message)
-#     except Exception as error:
-#         await log(message, error=error)
 
 @router.message(Command('gg'))
 async def start(message: types.Message, state: FSMContext):
@@ -138,8 +58,8 @@ async def start(message: types.Message, state: FSMContext):
 
 @router.message(Command('addbot'))
 async def cmd_start(message: types.Message, command: CommandObject,
-    dp_for_new_bot: Dispatcher,
-    polling_manager: PollingManager):
+                    dp_for_new_bot: Dispatcher,
+                    polling_manager: PollingManager):
     if command.args:
         try:
             bot = Bot(command.args)
@@ -147,7 +67,6 @@ async def cmd_start(message: types.Message, command: CommandObject,
             if bot.id in polling_manager.polling_tasks:
                 await message.answer('Bot with this id already running')
                 return
-
 
             # also propagate dp and polling manager to new bot to allow new bot add bots
             polling_manager.start_bot_polling(

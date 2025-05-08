@@ -1,13 +1,13 @@
 from typing import List
 from aiogram import Bot, Dispatcher
 from loguru import logger
-from app.routers.commands import router as commands
-from app.routers.callback import router as callback
-from app.routers.messages import router as messages
+from app.routers.command.command import router as command
+from app.routers.callback.callback import router as callback
+from app.routers.message.messages import router as messages
 from app.middlewares.middlewares import MiddlewareCommand, MiddlewareMessage, MiddlewareCallback
 
 from aiogram.fsm.storage.memory import SimpleEventIsolation
-from app.modules.multibot.polling_manager import PollingManager
+from app.modules.polling_manager import PollingManager
 
 # async def on_bot_startup(bot: Bot):
 #     # await set_commands(bot)
@@ -30,20 +30,24 @@ async def on_shutdown(bots: List[Bot]):
     #     await on_bot_shutdown(bot)
 
 
-def init_routers() -> Dispatcher:
+def init_routers() -> tuple[Dispatcher, PollingManager]:
     dp = Dispatcher(events_isolation=SimpleEventIsolation())
 
-    commands.message.middleware(MiddlewareCommand())
-    messages.message.middleware(MiddlewareMessage())
-    callback.callback_query.middleware(MiddlewareCallback())
+    # Пары роутеров и соответствующих middleware
+    middlewares = [
+        (command.message, MiddlewareCommand()),
+        (messages.message, MiddlewareMessage()),
+        (callback.callback_query, MiddlewareCallback()),
+    ]
 
-    dp.include_router(commands)
-    dp.include_router(callback)
-    dp.include_router(messages)
+    for target, middleware in middlewares:
+        target.middleware(middleware)
+
+    # Подключение всех роутеров
+    for router in (callback, command, messages):
+        dp.include_router(router)
 
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
 
-    polling_manager = PollingManager()
-
-    return dp, polling_manager
+    return dp, PollingManager()

@@ -42,11 +42,11 @@
             "lang": [
                 [
                     "Русский",
-                    "toggle_lang_ru"
+                    "select_lang_ru"
                 ],
                 [
                     "English",
-                    "toggle_lang_en"
+                    "select_lang_en"
                 ],
                 [
                     "Back",
@@ -54,10 +54,49 @@
                 ]
             ],
             "miniapp": [
-                "Open MiniApp", "Back"
+                [
+                    [
+                        "Open MiniApp",
+                        "webapp",
+                        "https://abdurakhmanov777.github.io/EventFlow-Frontend/"
+                    ]
+                ],
+                [
+                    [
+                        "Back",
+                        "start"
+                    ]
+                ]
+            ],
+            "test": [
+                [
+                    [
+                        "Open MiniApp",
+                        "webapp",
+                        "https://lh7fk1md-5500.euw.devtunnels.ms/"
+                    ]
+                ],
+                [
+                    [
+                        "Back",
+                        "start"
+                    ]
+                ]
             ],
             "help": [
-                "Bot Administrator", "Close Window"
+                [
+                    [
+                        "Bot Administrator",
+                        "url",
+                        "tg://user?id=1645736584"
+                    ]
+                ],
+                [
+                    [
+                        "Close Window",
+                        "delete"
+                    ]
+                ]
             ]
         }
     },
