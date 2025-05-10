@@ -1,17 +1,14 @@
-import asyncio
-from aiogram import Bot
-import uvicorn
-from fastapi import FastAPI
-from app.database.models import async_main
-from app.api import init_routers as init_routers_api
-from app.routers import init_routers
-
-from init_logger import LoguruLoggingMiddleware, logger
-from app.database.requests import get_bots_startup
-from config import BOT_TOKEN
-
+import asyncio, logging, uvicorn
 from aiogram import Bot
 from aiogram.types import BotCommand
+
+from app.api import init_routers as init_routers_api
+from app.database.models import async_main
+from app.database.requests import get_bots_startup
+from app.routers import init_routers
+
+from config import BOT_TOKEN
+from init_logger import LoguruLoggingMiddleware, logger
 
 async def set_bot_commands(bot: Bot):
     commands = [
@@ -21,33 +18,35 @@ async def set_bot_commands(bot: Bot):
     await bot.set_my_commands(commands)
 
 
+
 async def main():
     try:
         await async_main()
+
         TOKENS = [BOT_TOKEN] + await get_bots_startup()
         bots = [Bot(token) for token in TOKENS]
+
+        # Сброс апдейтов и установка команд для первого бота
+        for i, bot in enumerate(bots):
+            await bot.delete_webhook()
+            await bot.get_updates(offset=-1)
+            if i == 0:
+                await set_bot_commands(bot)
+
+
         dp, polling_manager = init_routers()
         app = init_routers_api()
 
-        # Только для основного бота
-        await bots[0].get_updates(offset=-1)
-        await set_bot_commands(bots[0])
-
-        # Для остальных ботов только сбрасываем апдейты
-        for bot in bots[1:]:
-            await bot.get_updates(offset=-1)
-
         # Отключаем стандартный логгер FastAPI
-        import logging
         logging.getLogger('uvicorn').disabled = True
         logging.getLogger('fastapi').disabled = True
 
-        # Добавляем кастомное middleware для логирования
+        # Добавляем кастомный middleware
         app.add_middleware(LoguruLoggingMiddleware)
 
         logger.debug('Бот включен')
 
-        # Запуск FastAPI
+        # Настройка и запуск FastAPI и Aiogram
         config = uvicorn.Config(app, host='0.0.0.0', port=8000, log_level='critical')
         server = uvicorn.Server(config)
 
@@ -56,14 +55,13 @@ async def main():
             server.serve()
         )
 
-    except asyncio.CancelledError:
-        logger.debug("Операция была отменена (например, по Ctrl+C)")
-    except KeyboardInterrupt:
-        logger.debug("Получен сигнал KeyboardInterrupt (Ctrl+C)")
+    except (asyncio.CancelledError, KeyboardInterrupt):
+        logger.debug("Завершение работы по сигналу отмены или Ctrl+C")
     except Exception as e:
         logger.error(f"Необработанная ошибка: {e}")
     finally:
         logger.debug("Бот отключен")
+
 
 
 

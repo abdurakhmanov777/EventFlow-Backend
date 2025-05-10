@@ -1,11 +1,15 @@
 aiogram
-sqlalchemy
 aiosqlite
+sqlalchemy
 loguru
-gspread
-pillow
-asyncpg
 fastapi
 uvicorn
 python-dotenv
 pymorphy3
+
+pytest
+pytest-asyncio
+
+# gspread
+# pillow
+# asyncpg
