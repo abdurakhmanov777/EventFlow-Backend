@@ -9,7 +9,7 @@ from app.modules.polling_manager import PollingManager
 from app.routers.config import COMMAND_MAIN
 from app.functions import keyboards as kb
 from app.database import requests as rq
-from app.utils.logging import log
+from app.utils.logger import log
 
 router = Router()
 

@@ -11,7 +11,7 @@ from aiogram.fsm.context import FSMContext
 from app.modules.polling_manager import PollingManager
 import app.database.requests as rq
 import app.functions.keyboards as kb
-from app.utils.logging import log
+from app.utils.logger import log
 
 router = Router()
 

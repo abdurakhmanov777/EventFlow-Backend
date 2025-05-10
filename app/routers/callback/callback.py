@@ -5,7 +5,7 @@ import app.functions.keyboards as kb
 import app.database.requests as rq
 from app.routers.config import CALLBACK_MAIN, CALLBACK_SELECT
 from app.utils.localization import load_localization
-from app.utils.logging import log
+from app.utils.logger import log
 
 
 router = Router()

@@ -7,7 +7,7 @@ from aiogram.fsm.context import FSMContext
 import app.database.requests as rq
 import app.functions.keyboards as kb
 
-from app.utils.logging import log
+from app.utils.logger import log
 from app.utils.morphology import inflect_text, fix_preposition_o
 
 

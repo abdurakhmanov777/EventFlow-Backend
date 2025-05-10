@@ -8,7 +8,7 @@ from app.database.requests import get_bots_startup
 from app.routers import init_routers
 
 from config import BOT_TOKEN
-from init_logger import LoguruLoggingMiddleware, logger
+from logger import LoguruLoggingMiddleware, logger
 
 async def set_bot_commands(bot: Bot):
     commands = [
