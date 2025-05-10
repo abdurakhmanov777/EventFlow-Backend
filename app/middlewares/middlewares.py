@@ -3,28 +3,22 @@ from aiogram import BaseMiddleware, types
 
 import app.database.requests as rq
 from app.utils.localization import load_localization
+from app.utils.logger import log_error
 
 async def update_language_data(event, data: dict) -> dict:
-    state = data.get('state')
+    state = data['state']
+    user_data = await state.get_data()
 
-    lang = None
+    if 'loc' in user_data:
+        return
 
-    if state:
-        user_data = await state.get_data()
-        lang = user_data.get('lang')
+    lang = user_data.get('lang') or await rq.user_check(event.from_user.id, 'lang')
+    await state.update_data(
+        lang=lang,
+        loc=await load_localization(lang)
+    )
 
-    # Если язык не найден в состоянии — проверим в БД
-    if not lang:
-        lang = await rq.user_check(event.from_user.id, 'lang')
 
-    # Загружаем локализацию
-    lang_data = await load_localization(lang)
-
-    # Обновляем состояние
-    if state:
-        await state.update_data(lang=lang, loc=lang_data)
-
-    return lang_data
 
 
 
@@ -43,15 +37,16 @@ class MiddlewareCommand(BaseMiddleware):
         data['counter'] = self.counter
 
         await update_language_data(event, data)
-
-        result = await handler(event, data)
-
         try:
-            await event.delete()
-        except Exception:
-            pass
+            result = await handler(event, data)
+            try:
+                await event.delete()
+            except Exception:
+                pass
 
-        return result
+            return result
+        except Exception as error:
+            await log_error(event, error=error)
 
 
 class MiddlewareMessage(BaseMiddleware):
@@ -69,9 +64,16 @@ class MiddlewareMessage(BaseMiddleware):
 
         await update_language_data(event, data)
 
-        result = await handler(event, data)
+        try:
+            result = await handler(event, data)
+            try:
+                await event.delete()
+            except Exception:
+                pass
 
-        return result
+            return result
+        except Exception as error:
+            await log_error(event, error=error)
 
 
 class MiddlewareCallback(BaseMiddleware):
@@ -88,5 +90,10 @@ class MiddlewareCallback(BaseMiddleware):
         data['counter'] = self.counter
 
         await update_language_data(event, data)
-        result = await handler(event, data)
-        return result
+
+        try:
+            result = await handler(event, data)
+
+            return result
+        except Exception as error:
+            await log_error(event, error=error)

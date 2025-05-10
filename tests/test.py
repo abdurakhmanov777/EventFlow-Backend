@@ -5,8 +5,7 @@ import os
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
 sys.path.insert(0, BASE_DIR)
 
-import pytest
-import difflib
+import pytest, difflib
 from app.utils.morphology import inflect_text
 from tests.test_cases import test_cases
 

@@ -10,56 +10,52 @@ from app.routers.config import COMMAND_MAIN
 from app.functions import keyboards as kb
 from app.database import requests as rq
 from app.utils.logger import log
+from app.utils.time import time_now
 
 router = Router()
 
 
 @router.message(Command(*COMMAND_MAIN))
 async def main(message: types.Message, state: FSMContext):
-    try:
-        key = message.text.lstrip('/').split()[0]
-        loc = (await state.get_data()).get('loc')
+    key = message.text.lstrip('/').split()[0]
+    loc = (await state.get_data()).get('loc')
+    print(await time_now())
+    text = getattr(loc.default.text, key)
+    keyboard = await kb.keyboard_dymanic(getattr(loc.default.keyboard, key))
 
-        text = getattr(loc.default.text, key)
-        keyboard = await kb.keyboard_dymanic(getattr(loc.default.keyboard, key))
-
-        await message.answer(text=text, parse_mode='HTML', reply_markup=keyboard)
-
-        await log(message)
-    except Exception as error:
-        await log(message, error=error)
-
+    await message.answer(text=text, parse_mode='HTML', reply_markup=keyboard)
+    await log(message)
 
 
 @router.message(Command('gg'))
 async def start(message: types.Message, state: FSMContext):
-    try:
-        loc = (await state.get_data()).get('loc')
+    loc = (await state.get_data()).get('loc')
 
-        # state_name = 'state_2'
-        # print(getattr(loc, state_name).type)
+    # state_name = 'state_2'
+    # print(getattr(loc, state_name).type)
 
-        # parts_text = loc.template.input.start
-        # name = 'ФИО'
-        # format = 'Иванов Иван Иванович'
-        # text = f'{parts_text[0]}{name}{parts_text[1]}{format}{parts_text[2]}'
+    # parts_text = loc.template.input.start
+    # name = 'ФИО'
+    # format = 'Иванов Иван Иванович'
+    # text = f'{parts_text[0]}{name}{parts_text[1]}{format}{parts_text[2]}'
 
-        parts_text = loc.template.input.saved
-        name = 'ФИО'
-        value = 'Абдурахманов Далгат Шамильевич'
-        text = f'{parts_text[0]}{name}{parts_text[1]}{value}{parts_text[2]}'
+    parts_text = loc.template.input.saved
+    name = 'ФИО'
+    value = 'Абдурахманов Далгат Шамильевич'
+    text = f'{parts_text[0]}{name}{parts_text[1]}{value}{parts_text[2]}'
 
-        await message.answer(text=text, parse_mode='HTML')
+    await message.answer(text=text, parse_mode='HTML')
 
-        await log(message)
-    except Exception as error:
-        await log(message, error=error)
+    await log(message)
 
 
 @router.message(Command('addbot'))
-async def cmd_start(message: types.Message, command: CommandObject,
-                    dp_for_new_bot: Dispatcher,
-                    polling_manager: PollingManager):
+async def cmd_start(
+    message: types.Message,
+    command: CommandObject,
+    dp_for_new_bot: Dispatcher,
+    polling_manager: PollingManager
+):
     if command.args:
         try:
             bot = Bot(command.args)

@@ -13,67 +13,60 @@ router = Router()
 
 @router.callback_query(F.data == 'delete')
 async def delete(callback: types.CallbackQuery):
-    try:
-        await callback.message.delete()
+    await callback.message.delete()
 
-        await log(callback)
-    except Exception as error:
-        await log(callback, error=error)
+    await log(callback)
 
 
 
 @router.callback_query(lambda c: c.data in CALLBACK_MAIN)
 async def main(callback: types.CallbackQuery, state: FSMContext):
-    try:
-        loc = (await state.get_data()).get('loc')
-        key = callback.data
+    loc = (await state.get_data()).get('loc')
+    key = callback.data
 
-        text = getattr(loc.default.text, key, '')
-        keyboard = await kb.keyboard_dymanic(getattr(loc.default.keyboard, key, []))
+    text = getattr(loc.default.text, key, '')
+    keyboard = await kb.keyboard_dymanic(getattr(loc.default.keyboard, key, []))
 
-        await callback.message.edit_text(text, parse_mode='HTML', reply_markup=keyboard)
-        await log(callback)
-    except Exception as error:
-        await log(callback, error=error)
+    await callback.message.edit_text(text, parse_mode='HTML', reply_markup=keyboard)
+
+    await log(callback)
 
 
 @router.callback_query(lambda c: c.data in CALLBACK_SELECT)
 async def select(callback: types.CallbackQuery, state: FSMContext):
-    try:
-        user_data = await state.get_data()
-        loc = user_data.get('loc')
-        key = callback.data
-        current_value = user_data.get(key)
+    user_data = await state.get_data()
+    loc = user_data.get('loc')
+    key = callback.data
+    current_value = user_data.get(key)
 
-        text = getattr(loc.default.text, key)
-        keyboard = await kb.toggle(getattr(loc.default.keyboard, key), f'select_{key}_{current_value}')
+    text = getattr(loc.default.text, key)
+    keyboard = await kb.toggle(getattr(loc.default.keyboard, key), f'select_{key}_{current_value}')
 
-        await callback.message.edit_text(text=text, parse_mode='HTML', reply_markup=keyboard)
-        await log(callback)
-    except Exception as error:
-        await log(callback, error=error)
+    await callback.message.edit_text(text=text, parse_mode='HTML', reply_markup=keyboard)
 
+    await log(callback)
 
 
 @router.callback_query(lambda c: c.data.startswith('select_') and len(c.data.split('_')) == 3)
 async def option(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
+    _, key, value = callback.data.split('_')
+    user_data = await state.get_data()
+
+    if key:
+        loc = await load_localization(value)
+        await state.update_data(lang=value, loc=loc)
+    else:
+        loc = user_data.get('loc')
+
+    text = getattr(loc.default.text, key)
+    keyboard = await kb.toggle(getattr(loc.default.keyboard, key), callback.data)
+
     try:
-        _, key, value = callback.data.split('_')
-        user_data = await state.get_data()
+        await callback.message.edit_text(text=text, parse_mode='HTML', reply_markup=keyboard)
+        await state.update_data(**{key: value})
+        await rq.user_update(callback.from_user.id, key, value)
+    except:
+        pass
 
-        loc = await load_localization(value) if key == 'lang' else user_data.get('loc')
-
-        text = getattr(loc.default.text, key)
-        keyboard = await kb.toggle(getattr(loc.default.keyboard, key), callback.data)
-
-        try:
-            await callback.message.edit_text(text=text, parse_mode='HTML', reply_markup=keyboard)
-            await state.update_data(**{key: value})
-            await rq.user_update(callback.from_user.id, key, value)
-        except:
-            pass
-
-        await log(callback)
-    except Exception as error:
-        await log(callback, error=error)
+    await log(callback)

@@ -1,7 +1,21 @@
-import re, pymorphy3
+import re
+import pymorphy3
 
 # Создаем экземпляр морфологического анализатора
 morph = pymorphy3.MorphAnalyzer()
+
+FIX_O_PATTERN = re.compile(r"\b([оО])\s+([«'“‘(]*)(\w)")
+VOWELS = set('аеёиоуыэюяАЕЁИОУЫЭЮЯ')
+
+SENTENCE_ENDINGS_PATTERN = re.compile(r'([.!?])(\s+|$)')
+WORD_PATTERN = re.compile(r'\w+|\s+|[^\w\s]', re.UNICODE)
+
+
+async def process_text(text_1: str, text_2: str, case: str, capitalize_first: bool = True) -> str:
+    combined = text_1 + await inflect_text(text_2, case)
+    combined = await lowercase_except_abbreviations(combined, capitalize_first)
+    return await fix_preposition_o(combined)
+
 
 # Сопоставление падежей с кодами pymorphy3
 CASES = {
@@ -12,6 +26,7 @@ CASES = {
     'творительный': 'ablt',
     'предложный': 'loct'
 }
+
 
 async def inflect_text(text: str, case: str) -> str:
     # Получение кода падежа
@@ -40,53 +55,55 @@ async def inflect_text(text: str, case: str) -> str:
     words = text.split()
     parsed = [choose_best_parse(w) for w in words]
 
-    # Поиск существительного в тексте
+    # Поиск первого существительного (обрабатываем только одно раз)
     noun = next((p for p in parsed if 'NOUN' in p.tag), None)
     if not noun:
         return text
 
-    # Получение числа существительного (ед. или мн. число)
+    # Получение числа (ед. или мн. число)
     number = noun.tag.number
     result = []
 
-    # Обработка каждого слова в тексте
+    # Обработка каждого слова
     for word, parse in zip(words, parsed):
-        if parse == noun or ('ADJF' in parse.tag and parse.tag.number == number):
+        if (
+            parse == noun or
+            ('ADJF' in parse.tag and parse.tag.number == number)
+        ):
             tags = set()
 
-            # Применение падежа для существительных и прилагательных
+            # Особая логика для винительного падежа
             if case_code == 'accs':
                 if 'NOUN' in parse.tag:
                     if parse.tag.gender == 'femn' and parse.tag.number == 'sing':
                         tags.add('accs')
                     elif 'anim' in parse.tag:
-                        tags.add('accs')  # Для одушевлённых существительных
+                        tags.add('accs')
                     else:
                         tags.add('nomn')
                 elif 'ADJF' in parse.tag:
                     if parse.tag.gender == 'femn' and parse.tag.number == 'sing':
                         tags.add('accs')
                     elif 'anim' in noun.tag:
-                        tags.add('accs')  # Для одушевлённых прилагательных
+                        tags.add('accs')
                     else:
                         tags.add('nomn')
             else:
                 tags.add(case_code)
 
-            # Учет числа (единственное или множественное)
+            # Добавление числа (если известно)
             if number:
                 tags.add(number)
 
-            # Применение склонения
+            # Склонение и добавление слова
             inflected = parse.inflect(tags)
             new_word = inflected.word if inflected else word
             result.append(preserve_case(word, new_word))
         else:
             result.append(word)
 
-    # Собираем результат
+    # Возвращаем результат
     return ' '.join(result)
-
 
 
 
@@ -95,15 +112,43 @@ async def fix_preposition_o(text: str) -> str:
     Заменяет предлог о/О на об/Об перед словами, начинающимися на гласную букву.
     '''
     def replacer(match):
-        preposition = match.group(1)
-        prefix = match.group(2)
-        first_letter = match.group(3)
-        is_upper = preposition[0].isupper()
+        preposition, prefix, first_letter = match.groups()
+        if first_letter in VOWELS:
+            return f'{"Об" if preposition == "О" else "об"} {prefix}{first_letter}'
+        return match.group(0)
 
-        # Выбираем правильную форму предлога
-        replacement = 'Об' if is_upper else 'об' if first_letter in 'аеёиоуыэюяАЕЁИОУЫЭЮЯ' else preposition
-        return f'{replacement} {prefix}{first_letter}'
+    return FIX_O_PATTERN.sub(replacer, text)
 
-    # Шаблон: о/О + пробел + опциональные кавычки/скобки + первая буква
-    pattern = r"\b([оО])\s+([«'“‘(]*)(\w)"
-    return re.sub(pattern, replacer, text)
+
+async def lowercase_except_abbreviations(text: str, capitalize_first: bool = True) -> str:
+    def is_abbreviation(word: str) -> bool:
+        return word.isupper() and len(word) > 1
+
+    def process_word(word: str) -> str:
+        return word if is_abbreviation(word) else word.lower()
+
+    # Разделение текста на предложения с сохранением пунктуации
+    parts = SENTENCE_ENDINGS_PATTERN.split(text)
+    sentences = ["".join(parts[i:i+2]) for i in range(0, len(parts), 2)]
+
+    processed_sentences = []
+    for sentence in sentences:
+        tokens = WORD_PATTERN.findall(sentence)
+        result = []
+        capitalize_next = capitalize_first
+
+        for token in tokens:
+            if token.strip() and token.isalpha():  # Слово
+                word = process_word(token)
+                if capitalize_next and not is_abbreviation(word):
+                    word = word.capitalize()
+                result.append(word)
+                capitalize_next = False
+            else:
+                result.append(token)
+                if token in '.!?':  # Пунктуация
+                    capitalize_next = capitalize_first
+
+        processed_sentences.append(''.join(result))
+
+    return ''.join(processed_sentences)
