@@ -30,6 +30,7 @@ class Bot(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
+    link: Mapped[str] = mapped_column(String, nullable=False)
     api: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[bool] = mapped_column(Boolean, default=False)
     settings: Mapped[str] = mapped_column(String, nullable=True)

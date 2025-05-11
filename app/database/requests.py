@@ -1,6 +1,7 @@
 import asyncio
 from app.database.models import UserApp, Bot, UserBot, Data, async_session
 from sqlalchemy import select
+from aiogram import Bot as Bot_aiogram
 
 async def new_user(tg_id):
     async with async_session() as session:
@@ -55,16 +56,32 @@ async def add_bot(tg_id, name, api):
         if existing_bots:
             name_exists = any(bot.name == name for bot in existing_bots)
             api_exists = any(bot.api == api for bot in existing_bots)
-
+            # print(name_exists, api_exists)
             return {
                 'status': False,
                 'name': name_exists,
-                'api': api_exists
+                'api': api_exists,
+                'link': False,
             }
+        # elif
+        try:
+            bot = Bot_aiogram(api)
+            link = (await bot.get_me()).username
+            # print(link)
 
-        session.add(Bot(name=name, api=api, user_app_id=user.id))
-        await session.commit()
-        return {'status': True}
+            session.add(Bot(
+                name=name, api=api, user_app_id=user.id, link=link
+            ))
+            await session.commit()
+            return {'status': True, 'link': link}
+        except:
+            return {
+                'status': False,
+                'name': False,
+                'api': False
+            }
+        finally:
+            await bot.session.close()
 
 
 async def delete_bot(tg_id, name):
@@ -95,7 +112,9 @@ async def get_user_bots(tg_id):
             await new_user(tg_id)
             return []
 
-        query = select(Bot.name, Bot.api, Bot.status).join(UserApp).where(UserApp.id == user.id)
+        query = select(
+            Bot.name, Bot.api, Bot.link, Bot.status
+        ).join(UserApp).where(UserApp.id == user.id)
 
         result = await session.execute(query)
         bots_data = result.fetchall()
@@ -103,7 +122,8 @@ async def get_user_bots(tg_id):
         return [{
             'name': bot_data[0],
             'api': bot_data[1],
-            'status': bot_data[2]
+            'link': bot_data[2],
+            'status': bot_data[3]
             # 'status': bot_data
         } for bot_data in bots_data]
 
