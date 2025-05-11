@@ -56,18 +56,17 @@ async def add_bot(tg_id, name, api):
         if existing_bots:
             name_exists = any(bot.name == name for bot in existing_bots)
             api_exists = any(bot.api == api for bot in existing_bots)
-            # print(name_exists, api_exists)
             return {
                 'status': False,
                 'name': name_exists,
                 'api': api_exists,
                 'link': False,
             }
-        # elif
+
+        bot = None  # Инициализируем заранее
         try:
             bot = Bot_aiogram(api)
             link = (await bot.get_me()).username
-            # print(link)
 
             session.add(Bot(
                 name=name, api=api, user_app_id=user.id, link=link
@@ -81,7 +80,9 @@ async def add_bot(tg_id, name, api):
                 'api': False
             }
         finally:
-            await bot.session.close()
+            if bot is not None:
+                await bot.session.close()
+
 
 
 async def delete_bot(tg_id, name):
