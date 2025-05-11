@@ -127,9 +127,6 @@ class PollingManager:
         polling_task = self.polling_tasks.pop(bot_id, None)
         if polling_task:
             polling_task.cancel()
-            logger.info(f"Отправлена отмена polling задачи для бота {bot_id}")
-        else:
-            logger.warning(f"Polling task для бота с ID {bot_id} не найден.")
 
 
 polling_manager = PollingManager()

@@ -89,17 +89,18 @@ async def delete_bot(tg_id, name):
         user = await session.scalar(select(UserApp).where(UserApp.tg_id == tg_id))
 
         if not user:
-            return {'status': False, 'error': 'User not found'}
+            return False, {'status': False, 'error': 'User not found'}
 
         bot = await session.scalar(select(Bot).where(Bot.user_app_id == user.id, Bot.name == name))
 
         if not bot:
-            return {'status': False, 'error': 'Bot not found'}
+            return False, {'status': False, 'error': 'Bot not found'}
 
+        bot_api = bot.api
         await session.delete(bot)
         await session.commit()
 
-        return {'status': True}
+        return bot_api, {'status': True}
 
 
 
@@ -136,10 +137,12 @@ async def user_update_bot(tg_id, api, field_name, new_value):
             if bot:
                 setattr(bot, field_name, new_value)
                 name = bot.name
+                link = bot.link
                 await session.commit()
                 return {
                     'status': new_value,
                     'name': name,
+                    'link': link,
                     'api': api
                 }
     return False

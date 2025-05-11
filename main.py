@@ -5,7 +5,7 @@ from aiogram.types import BotCommand
 from app.api import init_routers as init_routers_api
 from app.database.models import async_main
 from app.database.requests import get_bots_startup
-from app.modules.new import start_multiple_bots
+from app.modules.multibot import start_multiple_bots
 from app.routers.__init__ import init_routers
 
 from config import BOT_TOKEN
