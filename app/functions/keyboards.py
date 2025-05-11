@@ -1,9 +1,8 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
+
 none = InlineKeyboardMarkup(inline_keyboard=[])
 
-
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 async def keyboard_dymanic(data: list[list[list[str]]]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
@@ -35,7 +34,6 @@ async def keyboard(data: list[list[list[str]]]) -> InlineKeyboardMarkup:
             for row in data
         ]
     )
-
 
 
 async def toggle(data: list, flag: str) -> InlineKeyboardMarkup:

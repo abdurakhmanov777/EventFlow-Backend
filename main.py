@@ -5,7 +5,8 @@ from aiogram.types import BotCommand
 from app.api import init_routers as init_routers_api
 from app.database.models import async_main
 from app.database.requests import get_bots_startup
-from app.routers import init_routers
+from app.modules.new import start_multiple_bots
+from app.routers.__init__ import init_routers
 
 from config import BOT_TOKEN
 from app.utils.logger import LoguruLoggingMiddleware, logger
@@ -21,37 +22,40 @@ async def set_bot_commands(bot: Bot):
 
 async def main():
     try:
+        # Инициализация базы данных
         await async_main()
 
-        TOKENS = [BOT_TOKEN] + await get_bots_startup()
-        bots = [Bot(token) for token in TOKENS]
+        # Получаем токены ботов, включая основной токен
+        TOKENS = await get_bots_startup()
 
-        # Сброс апдейтов и установка команд для первого бота
-        for i, bot in enumerate(bots):
-            await bot.delete_webhook()
-            await bot.get_updates(offset=-1)
-            if i == 0:
-                await set_bot_commands(bot)
+        # Для первого бота выполняем настройку
+        main_bot = Bot(BOT_TOKEN)
+        await main_bot.delete_webhook()
+        await main_bot.get_updates(offset=-1)
+        await set_bot_commands(main_bot)
 
 
         dp, polling_manager = init_routers()
-        app = init_routers_api()
+        # Запуск всех ботов (кроме первого)
+        await start_multiple_bots(TOKENS, polling_manager)
 
         # Отключаем стандартный логгер FastAPI
         logging.getLogger('uvicorn').disabled = True
         logging.getLogger('fastapi').disabled = True
 
         # Добавляем кастомный middleware
+        app = init_routers_api()
         app.add_middleware(LoguruLoggingMiddleware)
 
-        logger.debug('Бот включен')
+        logger.debug(f'Ботов включено: 1 / {len(TOKENS)}')
 
         # Настройка и запуск FastAPI и Aiogram
         config = uvicorn.Config(app, host='0.0.0.0', port=8000, log_level='critical')
         server = uvicorn.Server(config)
 
         await asyncio.gather(
-            dp.start_polling(*bots, dp_for_new_bot=dp, polling_manager=polling_manager),
+            # Первый бот работает с основным dp
+            dp.start_polling(*[main_bot], dp_for_new_bot=dp, polling_manager=polling_manager),
             server.serve()
         )
 
@@ -60,8 +64,8 @@ async def main():
     except Exception as e:
         logger.error(f"Необработанная ошибка: {e}")
     finally:
-        logger.debug("Бот отключен")
-
+        TOKENS = await get_bots_startup()
+        logger.debug(f'Ботов отключено: 1 / {len(TOKENS)}')
 
 
 

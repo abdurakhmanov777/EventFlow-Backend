@@ -17,6 +17,14 @@ class PollingManager:
     def __init__(self):
         self.polling_tasks: Dict[int, Task] = {}
 
+    def active_bots_count(self) -> int:
+        """Возвращает количество активных ботов"""
+        return len(self.polling_tasks)
+
+    def active_bot_ids(self) -> List[int]:
+        """Возвращает список ID активных ботов"""
+        return list(self.polling_tasks.keys())
+
     def _create_pooling_task(
         self,
         dp: Dispatcher,
@@ -116,5 +124,15 @@ class PollingManager:
             await bot.session.close()
 
     def stop_bot_polling(self, bot_id: int):
-        polling_task = self.polling_tasks.pop(bot_id)
-        polling_task.cancel()
+        polling_task = self.polling_tasks.pop(bot_id, None)
+        if polling_task:
+            polling_task.cancel()
+            logger.info(f"Отправлена отмена polling задачи для бота {bot_id}")
+        else:
+            logger.warning(f"Polling task для бота с ID {bot_id} не найден.")
+
+
+polling_manager = PollingManager()
+
+def get_polling_manager():
+    return polling_manager
