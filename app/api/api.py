@@ -3,11 +3,11 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from fastapi import Depends
 
-from app.modules.multibot import start_bot, stop_bot
-from app.modules.polling_manager import PollingManager
+from app.modules.multibot.bot_manager import start_bot, stop_bot
+from app.modules.multibot.polling_manager import PollingManager
 import app.database.requests as rq
 
-from app.modules.polling_manager import get_polling_manager
+from app.modules.multibot.polling_manager import get_polling_manager
 
 router = APIRouter()
 

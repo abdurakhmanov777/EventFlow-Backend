@@ -11,7 +11,7 @@ from app.routers.multibot.message import get_router_message
 
 from app.middlewares.mw_main import MwCommand, MwMessage, MwCallback
 from app.middlewares.mw_muti import MwCommand_multi, MwMessage_multi, MwCallback_multi
-from app.modules.polling_manager import polling_manager
+from app.modules.multibot.polling_manager import get_polling_manager
 
 
 def _apply_middlewares(router_middleware_map: dict):
@@ -29,7 +29,7 @@ def init_routers() -> tuple[Dispatcher, callable]:
     })
 
     dp.include_routers(main_command, main_callback, main_message)
-    return dp, polling_manager
+    return dp, get_polling_manager()
 
 
 def create_router() -> Dispatcher:

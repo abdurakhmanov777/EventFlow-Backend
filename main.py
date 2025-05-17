@@ -5,7 +5,8 @@ from app.api import init_routers as init_routers_api
 from app.database.models import async_main
 from app.database.requests import get_bots_startup
 from app.functions.commands import bot_commands
-from app.modules.multibot import start_multiple_bots
+from app.modules.multibot.bot_manager import start_multiple_bots
+from app.modules.multibot.polling_manager import get_polling_manager
 from app.routers.__init__ import init_routers
 
 from config import BOT_TOKEN
@@ -54,8 +55,8 @@ async def main():
     except Exception as e:
         logger.error(f"Необработанная ошибка: {e}")
     finally:
-        TOKENS = await get_bots_startup()
-        logger.debug(f'Ботов отключено: 1 / {len(TOKENS)}')
+        TOKENS = get_polling_manager().active_bots_count()
+        logger.debug(f'Ботов отключено: 1 / {TOKENS}')
 
 
 
