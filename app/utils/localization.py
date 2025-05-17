@@ -19,8 +19,8 @@ class Localization:
 
 
 
-async def load_localization(language: str) -> Localization:
-    localization_file_path = 'app/localization/'
+async def load_localization_main(language: str) -> Localization:
+    localization_file_path = 'app/localization/main/'
     localization_file_name = language + '.json'
 
     try:
@@ -30,4 +30,18 @@ async def load_localization(language: str) -> Localization:
             return Localization(localization_dict)
     except Exception as error:
         logger.error(f"Error loading localization file: {error}")
-        return Localization({})  # Возвращаем пустой объект, если файл не найден
+        return Localization({})
+
+
+async def load_localization_multibot(language: str) -> Localization:
+    localization_file_path = 'app/localization/multibot/'
+    localization_file_name = language + '.json'
+
+    try:
+        # Загружаем данные из файла локализации
+        with open(os.path.join(localization_file_path, localization_file_name), mode='r', encoding='utf8') as localization_file:
+            localization_dict = json.load(localization_file)
+            return Localization(localization_dict)
+    except Exception as error:
+        logger.error(f"Error loading localization file: {error}")
+        return Localization({})

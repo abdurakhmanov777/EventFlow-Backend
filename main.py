@@ -1,23 +1,15 @@
 import asyncio, logging, uvicorn
 from aiogram import Bot
-from aiogram.types import BotCommand
 
 from app.api import init_routers as init_routers_api
 from app.database.models import async_main
 from app.database.requests import get_bots_startup
+from app.functions.commands import bot_commands
 from app.modules.multibot import start_multiple_bots
 from app.routers.__init__ import init_routers
 
 from config import BOT_TOKEN
 from app.utils.logger import LoguruLoggingMiddleware, logger
-
-async def set_bot_commands(bot: Bot):
-    commands = [
-        BotCommand(command="start", description="Запуск/перезапуск бота"),
-        BotCommand(command="help", description="Техническая поддержка"),
-    ]
-    await bot.set_my_commands(commands)
-
 
 
 async def main():
@@ -25,18 +17,16 @@ async def main():
         # Инициализация базы данных
         await async_main()
 
-        # Получаем токены ботов, включая основной токен
-        TOKENS = await get_bots_startup()
-
-        # Для первого бота выполняем настройку
         main_bot = Bot(BOT_TOKEN)
         await main_bot.delete_webhook()
         await main_bot.get_updates(offset=-1)
-        await set_bot_commands(main_bot)
+        await bot_commands(main_bot)
 
 
         dp, polling_manager = init_routers()
-        # Запуск всех ботов (кроме первого)
+
+        # Запуск всех созданных ботов
+        TOKENS = await get_bots_startup()
         await start_multiple_bots(TOKENS, polling_manager)
 
         # Отключаем стандартный логгер FastAPI

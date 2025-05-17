@@ -2,7 +2,7 @@ from typing import Any, Awaitable, Callable
 from aiogram import BaseMiddleware, types
 
 import app.database.requests as rq
-from app.utils.localization import load_localization
+from app.utils.localization import load_localization_multibot
 from app.utils.logger import log_error
 
 async def update_language_data(event, data: dict) -> dict:
@@ -15,15 +15,12 @@ async def update_language_data(event, data: dict) -> dict:
     lang = user_data.get('lang') or await rq.user_check(event.from_user.id, 'lang')
     await state.update_data(
         lang=lang,
-        loc=await load_localization(lang)
+        loc=await load_localization_multibot(lang)
     )
 
 
 
-
-
-
-class MiddlewareCommand(BaseMiddleware):
+class MwCommand_multi(BaseMiddleware):
     def __init__(self) -> None:
         self.counter = 0
 
@@ -49,7 +46,7 @@ class MiddlewareCommand(BaseMiddleware):
             await log_error(event, error=error)
 
 
-class MiddlewareMessage(BaseMiddleware):
+class MwMessage_multi(BaseMiddleware):
     def __init__(self) -> None:
         self.counter = 0
 
@@ -76,7 +73,7 @@ class MiddlewareMessage(BaseMiddleware):
             await log_error(event, error=error)
 
 
-class MiddlewareCallback(BaseMiddleware):
+class MwCallback_multi(BaseMiddleware):
     def __init__(self) -> None:
         self.counter = 0
 

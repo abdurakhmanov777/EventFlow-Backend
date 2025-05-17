@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 import app.functions.keyboards as kb
 import app.database.requests as rq
 from app.routers.config import CALLBACK_MAIN, CALLBACK_SELECT
-from app.utils.localization import load_localization
+from app.utils.localization import load_localization_main
 from app.utils.logger import log
 
 
@@ -54,7 +54,7 @@ async def option(callback: types.CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
 
     if key:
-        loc = await load_localization(value)
+        loc = await load_localization_main(value)
         await state.update_data(lang=value, loc=loc)
     else:
         loc = user_data.get('loc')

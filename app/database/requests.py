@@ -3,6 +3,8 @@ from app.database.models import UserApp, Bot, UserBot, Data, async_session
 from sqlalchemy import select
 from aiogram import Bot as Bot_aiogram
 
+from app.functions.commands import multibot_commands
+
 async def new_user(tg_id):
     async with async_session() as session:
         user = await session.scalar(select(UserApp).where(UserApp.tg_id == tg_id))
@@ -30,16 +32,6 @@ async def user_check(tg_id, field_name):
         else:
             return await new_user(tg_id)
 
-# async def add_bot(tg_id, name, api):
-#     async with async_session() as session:
-#         user = await session.scalar(select(UserApp).where(UserApp.tg_id == tg_id))
-#         if user:
-#             bot = await session.scalar(select(Bot).where(Bot.user_app_id == user.id))
-#             if not bot:
-#                 new_bot = Bot(name=name, api=api, user_app_id=user.id)
-#                 session.add(new_bot)
-#                 await session.commit()
-
 
 async def add_bot(tg_id, name, api):
     async with async_session() as session:
@@ -48,22 +40,25 @@ async def add_bot(tg_id, name, api):
             await new_user(tg_id)
             user = await session.scalar(select(UserApp).where(UserApp.tg_id == tg_id))
 
-        existing_bots = await session.execute(
-            select(Bot).where((Bot.user_app_id == user.id) & ((Bot.name == name) | (Bot.api == api)))
+        # Проверка: есть ли такой name у этого пользователя
+        name_exists = await session.scalar(
+            select(Bot).where(Bot.user_app_id == user.id, Bot.name == name)
         )
-        existing_bots = existing_bots.scalars().all()
 
-        if existing_bots:
-            name_exists = any(bot.name == name for bot in existing_bots)
-            api_exists = any(bot.api == api for bot in existing_bots)
+        # Проверка: есть ли такой api в любой записи в базе
+        api_exists = await session.scalar(
+            select(Bot).where(Bot.api == api)
+        )
+
+        if name_exists or api_exists:
             return {
                 'status': False,
-                'name': name_exists,
-                'api': api_exists,
+                'name': name_exists is not None,
+                'api': api_exists is not None,
                 'link': False,
             }
 
-        bot = None  # Инициализируем заранее
+        bot = None
         try:
             bot = Bot_aiogram(api)
             link = (await bot.get_me()).username
@@ -72,6 +67,7 @@ async def add_bot(tg_id, name, api):
                 name=name, api=api, user_app_id=user.id, link=link
             ))
             await session.commit()
+            asyncio.create_task(run_bot_tasks(bot))
             return {'status': True, 'link': link}
         except:
             return {
@@ -79,9 +75,12 @@ async def add_bot(tg_id, name, api):
                 'name': False,
                 'api': False
             }
-        finally:
-            if bot is not None:
-                await bot.session.close()
+
+async def run_bot_tasks(bot):
+    try:
+        await multibot_commands(bot)
+    finally:
+        await bot.session.close()
 
 
 
@@ -97,11 +96,11 @@ async def delete_bot(tg_id, name):
         if not bot:
             return False, {'status': False, 'error': 'Bot not found'}
 
-        bot_api = bot.api
+        bot_api, bot_on = bot.api, bot.status
         await session.delete(bot)
         await session.commit()
 
-        return bot_api, {'status': True}
+        return bot_api, bot_on, {'status': True}
 
 
 

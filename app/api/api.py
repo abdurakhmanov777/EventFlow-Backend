@@ -1,25 +1,15 @@
-import asyncio
 from fastapi import APIRouter, BackgroundTasks, Request, HTTPException
 from fastapi.responses import JSONResponse
 from loguru import logger
-from aiogram import Bot, Dispatcher
 from fastapi import Depends
 
 from app.modules.multibot import start_bot, stop_bot
 from app.modules.polling_manager import PollingManager
 import app.database.requests as rq
-from config import BOT_TOKEN
 
 from app.modules.polling_manager import get_polling_manager
 
-from app.routers.command.command import router as command
-from app.routers.callback.callback import router as callback
-from app.routers.message.messages import router as messages
-from app.middlewares.middlewares import MiddlewareCommand, MiddlewareMessage, MiddlewareCallback
-
-
 router = APIRouter()
-bot = Bot(token=BOT_TOKEN)
 
 CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
@@ -69,15 +59,15 @@ async def delete_bot(
         if not name:
             raise HTTPException(status_code=400, detail='Incorrect data')
 
-        bot_api, result = await rq.delete_bot(user_id, name)
+        bot_api, bot_on, result = await rq.delete_bot(user_id, name)
 
-        if bot_api:
+        if bot_api and bot_on:
             background_tasks.add_task(stop_bot, bot_api, polling_manager)
 
         return JSONResponse(content=result, headers=CORS_HEADERS)
 
     except Exception as error:
-        logger.error(f'Ошибка при обработке запроса от {data.get("user_id", "неизвестен")}: {error}')
+        logger.error(f'Ошибка при обработке запроса от {data.get('user_id', 'неизвестен')}: {error}')
         raise HTTPException(status_code=500, detail='Internal server error')
 
 
@@ -111,7 +101,7 @@ async def toggle_bot(
         user_id = data.get('user_id')
 
         if not user_id:
-            logger.warning("Отсутствует user_id")
+            logger.warning('Отсутствует user_id')
             raise HTTPException(status_code=401, detail='Authorization error')
 
         result = await rq.user_update_bot(user_id, api, 'status', value == 'on')
@@ -124,8 +114,6 @@ async def toggle_bot(
 
         return JSONResponse(content=result, headers=CORS_HEADERS)
 
-    except Exception as e:
-        logger.error(f"Ошибка обработки запроса: {e}")
+    except Exception as error:
+        logger.error(f'Ошибка обработки запроса: {error}')
         raise HTTPException(status_code=500, detail='Internal server error')
-
-
