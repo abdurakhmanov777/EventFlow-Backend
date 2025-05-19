@@ -50,7 +50,7 @@ class UserBot(Base):
     tg_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     msg_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     # state: Mapped[str] = mapped_column(String, default='1') # sqlite
-    # state: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+
     state: Mapped[list[str]] = mapped_column(
         ARRAY(String),
         nullable=False,

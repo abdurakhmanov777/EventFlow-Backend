@@ -13,8 +13,8 @@ async def create_msg(loc, state):
         keyboard = await kb.multi_text(current.keyboard)
 
     elif msg_type == 'input':
-        # data = 'Абдурахманов Далгат Шамильевич'
-        data = None
+        data = 'Абдурахманов Далгат Шамильевич'
+        # data = None
         if data:  # всегда будет False
             tmp = loc.template.input.saved
             text_msg = f'{tmp[0]}{text}{tmp[1]}{data}{tmp[2]}'
