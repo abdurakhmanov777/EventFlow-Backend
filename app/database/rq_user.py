@@ -31,8 +31,6 @@ async def new_user_bot(tg_id: int, telegram_bot_id: int, msg_id: int) -> tuple[s
         return user_bot.state[-1], msg_old
 
 
-
-
 async def user_state(tg_id: int, bot_id: int, action: str = 'peek', value: str | None = None):
     async with async_session() as session:
         sm = StateManager(session, tg_id, bot_id)
