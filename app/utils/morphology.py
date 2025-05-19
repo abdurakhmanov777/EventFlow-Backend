@@ -11,10 +11,17 @@ SENTENCE_ENDINGS_PATTERN = re.compile(r'([.!?])(\s+|$)')
 WORD_PATTERN = re.compile(r'\w+|\s+|[^\w\s]', re.UNICODE)
 
 
-async def process_text(text_1: str, text_2: str, case: str, capitalize_first: bool = True) -> str:
-    combined = text_1 + await inflect_text(text_2, case)
-    combined = await lowercase_except_abbreviations(combined, capitalize_first)
-    return await fix_preposition_o(combined)
+async def process_text(
+    text: str, case: str, first: bool = False, fix_o: str = None
+) -> str:
+    text = await inflect_text(text, case)
+    text = await lowercase_except_abbreviations(text, first)
+
+    if fix_o:
+        text = await fix_preposition_o(fix_o + text)
+
+    return text
+
 
 
 # Сопоставление падежей с кодами pymorphy3

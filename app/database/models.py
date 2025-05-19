@@ -1,5 +1,6 @@
 from loguru import logger
-from sqlalchemy import BigInteger, Boolean, ForeignKey, String
+from sqlalchemy import ARRAY, BigInteger, Boolean, ForeignKey, String, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 
@@ -19,7 +20,7 @@ class UserApp(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     lang: Mapped[str] = mapped_column(String, default='ru')
-    tg_id = mapped_column(BigInteger)
+    tg_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
 
     bots = relationship('Bot', back_populates='user')
 
@@ -29,6 +30,7 @@ class Bot(Base):
     __tablename__ = 'bot'
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    bot_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     link: Mapped[str] = mapped_column(String, nullable=False)
     api: Mapped[str] = mapped_column(String, nullable=False)
@@ -45,8 +47,15 @@ class UserBot(Base):
     __tablename__ = 'user_bot'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    tg_id: Mapped[int] = mapped_column(nullable=False)
-    state: Mapped[str] = mapped_column(String, nullable=True)
+    tg_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    msg_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    # state: Mapped[str] = mapped_column(String, default='1') # sqlite
+    # state: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+    state: Mapped[list[str]] = mapped_column(
+        ARRAY(String),
+        nullable=False,
+        server_default=text("ARRAY['1']::varchar[]")
+    )
     bot_id: Mapped[int] = mapped_column(ForeignKey('bot.id'))
 
     bot = relationship('Bot', back_populates='user_bots')
@@ -59,7 +68,7 @@ class Data(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
-    value: Mapped[str] = mapped_column(String, nullable=False)
+    value: Mapped[any] = mapped_column(JSONB, nullable=False)
     user_bot_id: Mapped[int] = mapped_column(ForeignKey('user_bot.id'))
 
     user_bot = relationship('UserBot', back_populates='data_entries')

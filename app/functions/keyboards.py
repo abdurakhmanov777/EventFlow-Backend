@@ -1,6 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
-
 none = InlineKeyboardMarkup(inline_keyboard=[])
 
 
@@ -24,33 +23,69 @@ async def keyboard_dymanic(data: list[list[list[str]]]) -> InlineKeyboardMarkup:
 async def keyboard(data: list[list[list[str]]]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text=txt,
-                    callback_data=typ
-                )
-                for txt, typ in row
-            ]
+            [InlineKeyboardButton(text=txt, callback_data=typ) for txt, typ in row]
             for row in data
         ]
     )
 
 
 async def toggle(data: list, flag: str) -> InlineKeyboardMarkup:
-    '''Создает InlineKeyboardMarkup из вложенного списка.'''
-    keyboard_buttons = []
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(
+                text=f'{label} ✓' if value == flag else label,
+                callback_data=value
+            )]
+            for label, value in data
+        ]
+    )
 
-    for item in data:
-        label = item[0]
-        value = item[1]
 
-        if value == flag:
-            text = f'{label} ✓'
+async def keyboard_user(data: list[list[list[str]]], state) -> InlineKeyboardMarkup:
+    inline_keyboard = [
+        [InlineKeyboardButton(text=txt, callback_data=f'state_{typ}') for txt, typ in row]
+        for row in data
+    ]
+    inline_keyboard.append([InlineKeyboardButton(text='Назад', callback_data=f'state_{state}')])
+    return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
+
+
+async def multi_next(next_state: str | int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text='Далее', callback_data=f'userstate_{next_state}')],
+            [InlineKeyboardButton(text='Назад', callback_data='userback')]
+        ]
+    )
+
+multi_back = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Назад', callback_data='userback')]
+])
+
+
+async def multi_text(next_state, text: str = 'Соглашаюсь') -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=text, callback_data=f'userstate_{next_state}')]
+        ]
+    )
+
+
+async def multi_select(data: list[list[str]]) -> InlineKeyboardMarkup:
+    long_buttons = []
+    short_buttons = []
+
+    for txt, state in data:
+        button = InlineKeyboardButton(text=txt, callback_data=f'userstate_{state}')
+        if len(txt) > 13:
+            long_buttons.append([button])  # одиночная строка
         else:
-            text = label
+            short_buttons.append(button)   # парные строки
 
-        button = InlineKeyboardButton(text=text, callback_data=value)
-        keyboard_buttons.append([button])  # каждая кнопка в отдельной строке
+    # Сгруппируем короткие кнопки по 2 в ряд
+    short_rows = [short_buttons[i:i+2] for i in range(0, len(short_buttons), 2)]
 
-    keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
-    return keyboard
+    keyboard = long_buttons + short_rows  # длинные — сверху, короткие — снизу
+    keyboard.append([InlineKeyboardButton(text='Назад', callback_data='userback')])
+
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

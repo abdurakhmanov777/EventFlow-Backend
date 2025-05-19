@@ -19,7 +19,7 @@ async def ckeck(message: types.Message, state: FSMContext):
     CASES = ['именительный', 'родительный', 'дательный', 'винительный', 'творительный', 'предложный']
     text = ''
     for case in CASES:
-        text_inflect = await process_text(f'{case}: ', mas[0], case)
+        text_inflect = f'{case}: ' + await process_text(mas[0], case)
         text += f'{text_inflect}\n'
     await message.answer(text)
 
@@ -28,8 +28,8 @@ async def ckeck(message: types.Message, state: FSMContext):
 
 @router.message(lambda message: message.text and message.text.count('\n') == 0)
 async def ckeck(message: types.Message, state: FSMContext):
-    text1 = await process_text('Введите ', message.text, 'винительный')
-    text2 = await process_text('Нет информации о ', message.text, 'предложный')
+    text1 = 'Введите ' + await process_text(message.text, 'винительный')
+    text2 = 'Нет информации о ' + await process_text(message.text, 'предложный')
     await message.answer(f'{text1}\n{text2}')
 
     await log(message)

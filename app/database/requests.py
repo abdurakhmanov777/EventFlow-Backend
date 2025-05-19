@@ -35,6 +35,7 @@ async def user_check(tg_id, field_name):
 
 async def add_bot(tg_id, name, api):
     async with async_session() as session:
+
         user = await session.scalar(select(UserApp).where(UserApp.tg_id == tg_id))
         if not user:
             await new_user(tg_id)
@@ -61,10 +62,11 @@ async def add_bot(tg_id, name, api):
         bot = None
         try:
             bot = Bot_aiogram(api)
-            link = (await bot.get_me()).username
-
+            bot_data = await bot.get_me()
+            link = bot_data.username
+            bot_id = bot_data.id
             session.add(Bot(
-                name=name, api=api, user_app_id=user.id, link=link
+                name=name, api=api, user_app_id=user.id, link=link, bot_id=bot_id
             ))
             await session.commit()
             asyncio.create_task(run_bot_tasks(bot))
