@@ -31,6 +31,20 @@ async def new_user_bot(tg_id: int, telegram_bot_id: int, msg_id: int) -> tuple[s
         return user_bot.state[-1], msg_old
 
 
+async def check_state_and_msg_id(
+    tg_id: int, telegram_bot_id: int
+) -> tuple[str, int] | tuple[None, None]:
+    async with async_session() as session:
+        user_bot = await session.scalar(
+            select(UserBot)
+            .join(Bot)
+            .where(UserBot.tg_id == tg_id, Bot.bot_id == telegram_bot_id)
+        )
+        if not user_bot:
+            return
+
+        return user_bot.state[-1], user_bot.msg_id
+
 async def user_state(tg_id: int, bot_id: int, action: str = 'peek', value: str | None = None):
     async with async_session() as session:
         sm = StateManager(session, tg_id, bot_id)

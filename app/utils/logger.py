@@ -41,13 +41,14 @@ class LoguruLoggingMiddleware(BaseHTTPMiddleware):
 
 async def log(event, info=None):
     user_id = event.from_user.id
-    username = event.from_user.username
+    # username = event.from_user.username
 
     frame = sys._getframe(1)
     func_name = frame.f_code.co_name
     filename = Path(frame.f_code.co_filename).name
     lineno = frame.f_lineno
-    message = f"[{filename}:{lineno}] {func_name} {f'({info}) ' if info else ''}({user_id}, {username})"
+    # message = f"[{filename}:{lineno}] {func_name} {f'({info}) ' if info else ''}({user_id}, {username})"
+    message = f"[{filename}:{lineno}] {func_name} ({f'{info}, ' if info else ''}{user_id})"
     logger.info(message)
 
 

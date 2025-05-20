@@ -19,8 +19,8 @@ def get_router_callback() -> Router:
         text_msg, keyboard = await create_msg(loc, callback_data[1])
 
         await callback.message.edit_text(
-            text = text_msg,
-            parse_mode = 'HTML',
+            text=text_msg,
+            parse_mode='HTML',
             reply_markup=keyboard
         )
 
@@ -28,10 +28,9 @@ def get_router_callback() -> Router:
             callback.from_user.id, bot_id, 'push', next_state
         )
 
-        print(await rq_user.user_state(callback.from_user.id, bot_id, 'get'))
+        # print(await rq_user.user_state(callback.from_user.id, bot_id, 'get'))
 
-        await log(callback)
-
+        await log(callback, info=next_state)
 
     @router.callback_query(F.data == 'userback')
     async def multi_back(callback: CallbackQuery, state: FSMContext):
@@ -44,21 +43,17 @@ def get_router_callback() -> Router:
             callback.from_user.id, bot_id, 'popeek'
         )
 
-        states = await rq_user.user_state(
-            callback.from_user.id, bot_id, 'get'
-        )
-        print(states)
+        # print(await rq_user.user_state(callback.from_user.id, bot_id, 'get'))
 
         text_msg, keyboard = await create_msg(loc, state_back)
         try:
             await callback.message.edit_text(
-                text = text_msg,
-                parse_mode = 'HTML',
+                text=text_msg,
+                parse_mode='HTML',
                 reply_markup=keyboard
             )
         except:
             pass
-        await log(callback)
-
+        await log(callback, info=state_back)
 
     return router

@@ -22,8 +22,8 @@ def get_router_command() -> Router:
         text_msg, keyboard = await create_msg(loc, state_db)
 
         await message.answer(
-            text = text_msg,
-            parse_mode = 'HTML',
+            text=text_msg,
+            parse_mode='HTML',
             reply_markup=keyboard
         )
         if msg_id:
@@ -31,8 +31,7 @@ def get_router_command() -> Router:
                 await message.bot.delete_message(message.chat.id, msg_id)
             except:
                 pass
-            
-        await log(message)
 
+        await log(message, info=state_db)
 
     return router

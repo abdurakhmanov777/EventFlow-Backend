@@ -159,3 +159,18 @@ async def lowercase_except_abbreviations(text: str, capitalize_first: bool = Tru
         processed_sentences.append(''.join(result))
 
     return ''.join(processed_sentences)
+
+
+def capitalize_each_word_except_abbreviations(text: str) -> str:
+    def is_abbreviation(word: str) -> bool:
+        return word.isupper() and len(word) > 1
+
+    def process_token(token: str) -> str:
+        if token.isalpha():
+            return token if is_abbreviation(token) else token.capitalize()
+        return token  # пробелы и пунктуация остаются как есть
+
+    tokens = WORD_PATTERN.findall(text)
+    processed = [process_token(token) for token in tokens]
+
+    return ''.join(processed)
