@@ -5,55 +5,46 @@ from app.database import rq_user
 from app.routers.multibot.multi_handler import create_msg
 from app.utils.logger import log
 
-
 def get_router_callback() -> Router:
     router = Router()
 
     @router.callback_query(lambda c: 'userstate_' in c.data)
     async def multi_clbk(callback: CallbackQuery, state: FSMContext):
-        callback_data = callback.data.split('_')
-        next_state = callback_data[1]
         data = await state.get_data()
         loc, bot_id = data.get('loc'), data.get('bot_id')
 
-        text_msg, keyboard = await create_msg(loc, callback_data[1])
+        _, next_state, *rest = callback.data.split('_')
 
-        await callback.message.edit_text(
-            text=text_msg,
-            parse_mode='HTML',
-            reply_markup=keyboard
+        back_state = await rq_user.user_state(
+            callback.from_user.id, bot_id, 'peekpush', next_state
         )
+        select_param = (rest[0], back_state) if rest else None
 
-        await rq_user.user_state(
-            callback.from_user.id, bot_id, 'push', next_state
+        text_msg, keyboard = await create_msg(
+            loc, next_state, callback.from_user.id, bot_id, select=select_param
         )
-
-        # print(await rq_user.user_state(callback.from_user.id, bot_id, 'get'))
-
+        await callback.message.edit_text(text=text_msg, parse_mode='HTML', reply_markup=keyboard)
         await log(callback, info=next_state)
 
     @router.callback_query(F.data == 'userback')
     async def multi_back(callback: CallbackQuery, state: FSMContext):
-        await callback.answer()
-
         data = await state.get_data()
         loc, bot_id = data.get('loc'), data.get('bot_id')
 
-        state_back = await rq_user.user_state(
-            callback.from_user.id, bot_id, 'popeek'
+        state_back = await rq_user.user_state(callback.from_user.id, bot_id, 'popeek')
+
+        text_msg, keyboard = await create_msg(
+            loc, state_back, callback.from_user.id, bot_id
         )
 
-        # print(await rq_user.user_state(callback.from_user.id, bot_id, 'get'))
-
-        text_msg, keyboard = await create_msg(loc, state_back)
         try:
-            await callback.message.edit_text(
-                text=text_msg,
-                parse_mode='HTML',
-                reply_markup=keyboard
-            )
+            await callback.message.edit_text(text=text_msg, parse_mode='HTML', reply_markup=keyboard)
         except:
-            pass
+            await callback.answer(
+                'Сообщение не может быть обновлено. Введите команду /start',
+                show_alert=True
+            )
+
         await log(callback, info=state_back)
 
     return router

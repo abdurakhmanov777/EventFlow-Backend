@@ -118,7 +118,7 @@
             ],
             "error_callback": "No information about "
         },
-        "selection": [
+        "select": [
             "<b>Select ",
             "</b>\n\n<i>Click on the required option</i>"
         ]

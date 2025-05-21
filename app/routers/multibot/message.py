@@ -1,15 +1,12 @@
 from aiogram import Router
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
-
 from app.routers.multibot.multi_handler import create_msg
 from app.utils.logger import log
 from app.database import rq_user
 
-
 def get_router_message() -> Router:
     router = Router()
-
 
     @router.message()
     async def multi_msg(message: Message, state: FSMContext):
@@ -23,14 +20,16 @@ def get_router_message() -> Router:
         if getattr(loc, state_db).type != 'input':
             return
 
-        text_msg, keyboard = await create_msg(loc, state_db, message.text)
+        text_msg, keyboard = await create_msg(
+            loc, state_db, message.from_user.id, bot_id, input_data=message.text
+        )
 
         try:
             await message.bot.edit_message_text(
-                chat_id = message.chat.id,
-                message_id = msg_id,
-                text = text_msg,
-                parse_mode = 'HTML',
+                chat_id=message.chat.id,
+                message_id=msg_id,
+                text=text_msg,
+                parse_mode='HTML',
                 reply_markup=keyboard
             )
         except:

@@ -63,7 +63,7 @@ multi_back = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 
-async def multi_text(next_state, text: str = 'Соглашаюсь') -> InlineKeyboardMarkup:
+async def multi_text(next_state, text: str = 'Даю согласие') -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text=text, callback_data=f'userstate_{next_state}')]
@@ -76,7 +76,7 @@ async def multi_select(data: list[list[str]]) -> InlineKeyboardMarkup:
     short_buttons = []
 
     for txt, state in data:
-        button = InlineKeyboardButton(text=txt, callback_data=f'userstate_{state}')
+        button = InlineKeyboardButton(text=txt, callback_data=f'userstate_{state}_{txt}')
         if len(txt) > 13:
             long_buttons.append([button])  # одиночная строка
         else:

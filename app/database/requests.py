@@ -98,11 +98,18 @@ async def delete_bot(tg_id, name):
         if not bot:
             return False, {'status': False, 'error': 'Bot not found'}
 
-        # Получаем пользователей этого бота
+        # Получаем список пользователей этого бота
         user_bots = await session.scalars(select(UserBot).where(UserBot.bot_id == bot.id))
+        user_bots = user_bots.all()  # превращаем в список
 
-        # Удаляем всех пользователей бота
+        # Удаляем все данные (Data) каждого пользователя бота и затем пользователей бота
         for user_bot in user_bots:
+            data_entries = await session.scalars(select(Data).where(Data.user_bot_id == user_bot.id))
+            data_entries = data_entries.all()  # тоже список
+
+            for data_entry in data_entries:
+                await session.delete(data_entry)
+
             await session.delete(user_bot)
 
         bot_api, bot_on = bot.api, bot.status
@@ -112,6 +119,7 @@ async def delete_bot(tg_id, name):
         await session.commit()
 
         return bot_api, bot_on, {'status': True}
+
 
 
 
