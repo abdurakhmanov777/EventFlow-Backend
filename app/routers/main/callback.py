@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 import app.functions.keyboards as kb
 import app.database.requests as rq
 from app.routers.config import CALLBACK_MAIN, CALLBACK_SELECT
-from app.utils.localization import load_localization_main
+from app.modules.localization.localization import load_localization_main
 from app.utils.logger import log
 
 

@@ -1,7 +1,7 @@
 from aiogram import Router
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
-from app.routers.multibot.multi_handler import create_msg
+from app.modules.multibot.multi_handler import create_msg
 from app.utils.logger import log
 from app.database import rq_user
 

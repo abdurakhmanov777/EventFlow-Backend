@@ -1,7 +1,13 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
+from config import SYMB
+
 none = InlineKeyboardMarkup(inline_keyboard=[])
 
+help = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(
+    text='Закрыть окно',
+    callback_data='delete'
+)]])
 
 async def keyboard_dymanic(data: list[list[list[str]]]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
@@ -43,7 +49,7 @@ async def toggle(data: list, flag: str) -> InlineKeyboardMarkup:
 
 async def keyboard_user(data: list[list[list[str]]], state) -> InlineKeyboardMarkup:
     inline_keyboard = [
-        [InlineKeyboardButton(text=txt, callback_data=f'state_{typ}') for txt, typ in row]
+        [InlineKeyboardButton(text=txt, callback_data=f'state{SYMB}{typ}') for txt, typ in row]
         for row in data
     ]
     inline_keyboard.append([InlineKeyboardButton(text='Назад', callback_data=f'state_{state}')])
@@ -53,7 +59,7 @@ async def keyboard_user(data: list[list[list[str]]], state) -> InlineKeyboardMar
 async def multi_next(next_state: str | int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='Далее', callback_data=f'userstate_{next_state}')],
+            [InlineKeyboardButton(text='Далее', callback_data=f'userstate{SYMB}{next_state}')],
             [InlineKeyboardButton(text='Назад', callback_data='userback')]
         ]
     )
@@ -66,7 +72,7 @@ multi_back = InlineKeyboardMarkup(inline_keyboard=[
 async def multi_text(next_state, text: str = 'Даю согласие') -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text=text, callback_data=f'userstate_{next_state}')]
+            [InlineKeyboardButton(text=text, callback_data=f'userstate{SYMB}{next_state}')]
         ]
     )
 
@@ -75,8 +81,11 @@ async def multi_select(data: list[list[str]]) -> InlineKeyboardMarkup:
     long_buttons = []
     short_buttons = []
 
-    for txt, state in data:
-        button = InlineKeyboardButton(text=txt, callback_data=f'userstate_{state}_{txt}')
+    for txt, state, flag_db in data:
+        button = InlineKeyboardButton(
+            text=txt,
+            callback_data=f'userstate{SYMB}{state}{SYMB}{txt}{SYMB}{flag_db}'
+        )
         if len(txt) > 13:
             long_buttons.append([button])  # одиночная строка
         else:

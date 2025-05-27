@@ -20,7 +20,7 @@ class Localization:
 
 
 async def load_localization_main(language: str) -> Localization:
-    localization_file_path = 'app/localization/main/'
+    localization_file_path = 'app/modules/localization/main/'
     localization_file_name = language + '.json'
 
     try:
@@ -29,12 +29,12 @@ async def load_localization_main(language: str) -> Localization:
             localization_dict = json.load(localization_file)
             return Localization(localization_dict)
     except Exception as error:
-        logger.error(f"Error loading localization file: {error}")
+        logger.error(f'Error loading localization file: {error}')
         return Localization({})
 
 
 async def load_localization_multibot(language: str) -> Localization:
-    localization_file_path = 'app/localization/multibot/'
+    localization_file_path = 'app/modules/localization/multibot/'
     localization_file_name = language + '.json'
 
     try:
@@ -43,5 +43,5 @@ async def load_localization_multibot(language: str) -> Localization:
             localization_dict = json.load(localization_file)
             return Localization(localization_dict)
     except Exception as error:
-        logger.error(f"Error loading localization file: {error}")
+        logger.error(f'Error loading localization file: {error}')
         return Localization({})

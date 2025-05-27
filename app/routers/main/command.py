@@ -4,7 +4,6 @@ from aiogram.fsm.context import FSMContext
 
 from app.routers.config import COMMAND_MAIN
 from app.functions import keyboards as kb
-from app.database import requests as rq
 from app.utils.logger import log
 
 router = Router()
@@ -24,14 +23,6 @@ async def main(message: types.Message, state: FSMContext):
 @router.message(Command('gg'))
 async def start(message: types.Message, state: FSMContext):
     loc = (await state.get_data()).get('loc')
-
-    # state_name = 'state_2'
-    # print(getattr(loc, state_name).type)
-
-    # parts_text = loc.template.input.start
-    # name = 'ФИО'
-    # format = 'Иванов Иван Иванович'
-    # text = f'{parts_text[0]}{name}{parts_text[1]}{format}{parts_text[2]}'
 
     parts_text = loc.template.input.saved
     name = 'ФИО'

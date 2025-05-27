@@ -10,7 +10,7 @@ from app.routers.multibot.callback import get_router_callback
 from app.routers.multibot.message import get_router_message
 
 from app.middlewares.mw_main import MwCommand, MwMessage, MwCallback
-from app.middlewares.mw_muti import MwCommand_multi, MwMessage_multi, MwCallback_multi
+from app.middlewares.mw_mutibot import MwCommand_multi, MwMessage_multi, MwCallback_multi
 from app.modules.multibot.polling_manager import get_polling_manager
 
 

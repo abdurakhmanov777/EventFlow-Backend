@@ -2,7 +2,7 @@ from typing import Any, Awaitable, Callable
 from aiogram import BaseMiddleware, types
 
 import app.database.requests as rq
-from app.utils.localization import load_localization_main
+from app.modules.localization.localization import load_localization_main
 from app.utils.logger import log_error
 
 async def update_language_data(event, data: dict) -> dict:

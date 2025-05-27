@@ -2,23 +2,30 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 from app.database import rq_user
-from app.routers.multibot.multi_handler import create_msg
+from app.modules.multibot.multi_handler import create_msg
 from app.utils.logger import log
+from config import SYMB
 
 def get_router_callback() -> Router:
     router = Router()
 
-    @router.callback_query(lambda c: 'userstate_' in c.data)
+    @router.callback_query(F.data == 'delete')
+    async def multi_delete(callback: CallbackQuery):
+        await callback.message.delete()
+
+        await log(callback)
+
+
+    @router.callback_query(lambda c: f'userstate{SYMB}' in c.data)
     async def multi_clbk(callback: CallbackQuery, state: FSMContext):
         data = await state.get_data()
         loc, bot_id = data.get('loc'), data.get('bot_id')
 
-        _, next_state, *rest = callback.data.split('_')
-
+        _, next_state, *rest = callback.data.split(SYMB)
         back_state = await rq_user.user_state(
             callback.from_user.id, bot_id, 'peekpush', next_state
         )
-        select_param = (rest[0], back_state) if rest else None
+        select_param = (rest[0], back_state) if (rest and rest[1] == 'True') else None
 
         text_msg, keyboard = await create_msg(
             loc, next_state, callback.from_user.id, bot_id, select=select_param

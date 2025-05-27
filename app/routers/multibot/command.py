@@ -2,7 +2,9 @@ from aiogram import Router
 from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from app.routers.multibot.multi_handler import create_msg
+
+from app.functions.keyboards import help
+from app.modules.multibot.multi_handler import create_msg
 from app.utils.logger import log
 from app.database import rq_user
 
@@ -34,5 +36,18 @@ def get_router_command() -> Router:
                 pass
 
         await log(message, info=state_db)
+
+    @router.message(Command('help'))
+    async def multi_cmd(message: Message, state: FSMContext):
+        data = await state.get_data()
+        loc = data.get('loc')
+
+        await message.answer(
+            text=loc.help,
+            parse_mode='HTML',
+            reply_markup=help
+        )
+
+        await log(message)
 
     return router

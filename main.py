@@ -1,13 +1,13 @@
 import asyncio, logging, uvicorn
 from aiogram import Bot
 
-from app.api import init_routers as init_routers_api
+from app.routers.__init_http__ import init_routers as init_routers_http
 from app.database.models import async_main
 from app.database.requests import get_bots_startup
 from app.functions.commands import bot_commands
 from app.modules.multibot.bot_manager import start_multiple_bots
 from app.modules.multibot.polling_manager import get_polling_manager
-from app.routers.__init__ import init_routers
+from app.routers.__init_bot__ import init_routers
 
 from config import BOT_TOKEN
 from app.utils.logger import LoguruLoggingMiddleware, logger
@@ -35,7 +35,7 @@ async def main():
         logging.getLogger('fastapi').disabled = True
 
         # Добавляем кастомный middleware
-        app = init_routers_api()
+        app = init_routers_http()
         app.add_middleware(LoguruLoggingMiddleware)
 
         logger.debug(f'Ботов включено: 1 / {len(TOKENS)}')
