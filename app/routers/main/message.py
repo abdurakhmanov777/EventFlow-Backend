@@ -3,8 +3,6 @@ from aiogram import Router
 from aiogram import types
 from aiogram.fsm.context import FSMContext
 
-import app.modules.keyboards.keyboards as kb
-
 from app.utils.logger import log
 from app.utils.morphology import process_text
 

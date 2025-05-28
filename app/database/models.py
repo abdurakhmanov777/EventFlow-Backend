@@ -49,13 +49,13 @@ class UserBot(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     tg_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     msg_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    # state: Mapped[str] = mapped_column(String, default='1') # sqlite
+    state: Mapped[str] = mapped_column(String, default='1') # sqlite
 
-    state: Mapped[list[str]] = mapped_column(
-        ARRAY(String),
-        nullable=False,
-        server_default=text("ARRAY['1']::varchar[]")
-    )
+    # state: Mapped[list[str]] = mapped_column(
+    #     ARRAY(String),
+    #     nullable=False,
+    #     server_default=text("ARRAY['1']::varchar[]")
+    # )
     bot_id: Mapped[int] = mapped_column(ForeignKey('bot.id'))
 
     bot = relationship('Bot', back_populates='user_bots')
@@ -68,7 +68,8 @@ class Data(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
-    value: Mapped[any] = mapped_column(JSONB, nullable=False)
+    # value: Mapped[any] = mapped_column(JSONB, nullable=False)
+    value: Mapped[any] = mapped_column(String, nullable=False)
     user_bot_id: Mapped[int] = mapped_column(ForeignKey('user_bot.id'))
 
     user_bot = relationship('UserBot', back_populates='data_entries')

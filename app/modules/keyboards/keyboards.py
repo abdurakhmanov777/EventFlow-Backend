@@ -9,7 +9,7 @@ help = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(
     callback_data='delete'
 )]])
 
-async def keyboard_dymanic(data: list[list[list[str]]]) -> InlineKeyboardMarkup:
+async def keyboard_dynamic(data: list[list[list[str]]]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [

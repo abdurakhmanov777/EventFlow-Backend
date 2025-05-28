@@ -25,7 +25,7 @@ async def main(callback: types.CallbackQuery, state: FSMContext):
     key = callback.data
 
     text = getattr(loc.default.text, key, '')
-    keyboard = await kb.keyboard_dymanic(getattr(loc.default.keyboard, key, []))
+    keyboard = await kb.keyboard_dynamic(getattr(loc.default.keyboard, key, []))
 
     await callback.message.edit_text(text, parse_mode='HTML', reply_markup=keyboard)
 

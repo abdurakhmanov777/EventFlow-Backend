@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from app.routers.config import COMMAND_MAIN
-from app.modules.keyboards import keyboards as kb
+from app.modules.keyboards.keyboards import keyboard_dynamic
 from app.utils.logger import log
 
 router = Router()
@@ -14,7 +14,7 @@ async def main(message: types.Message, state: FSMContext):
     key = message.text.lstrip('/').split()[0]
     loc = (await state.get_data()).get('loc')
     text = getattr(loc.default.text, key)
-    keyboard = await kb.keyboard_dymanic(getattr(loc.default.keyboard, key))
+    keyboard = await keyboard_dynamic(getattr(loc.default.keyboard, key))
 
     await message.answer(text=text, parse_mode='HTML', reply_markup=keyboard)
     await log(message)
