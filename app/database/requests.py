@@ -13,6 +13,7 @@ from app.database.managers.state_manager import StateManager
 async def get_active_bot_apis() -> list[str]:
     return await BotStatusService.get_active_apis()
 
+
 async def user_action(tg_id: int, action: str, **kwargs):
     try:
         async with async_session() as session:
@@ -49,6 +50,7 @@ async def user_bot(
     except SQLAlchemyError:
         return False
 
+
 async def user_state(
     tg_id: int,
     bot_id: int,
@@ -71,6 +73,7 @@ async def user_state(
             return await func() if func else None
     except SQLAlchemyError:
         return False
+
 
 async def user_data(
     tg_id: int,
