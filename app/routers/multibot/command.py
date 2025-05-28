@@ -8,6 +8,7 @@ from app.modules.multibot.multi_handler import create_msg
 from app.utils.logger import log
 from app.database import rq_user
 
+
 def get_router_command() -> Router:
     router = Router()
 
@@ -16,8 +17,11 @@ def get_router_command() -> Router:
         data = await state.get_data()
         loc, bot_id = data.get('loc'), data.get('bot_id')
 
-        state_db, msg_id = await rq_user.new_user_bot(
-            message.from_user.id, bot_id, message.message_id + 1
+        state_db, msg_id = await rq_user.user_bot(
+            tg_id=message.from_user.id,
+            bot_id=bot_id,
+            action='upsert',
+            msg_id=message.message_id+1
         )
 
         text_msg, keyboard = await create_msg(

@@ -3,9 +3,9 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from fastapi import Depends
 
+from app.database.rq_user import user_action
 from app.modules.multibot.bot_manager import start_bot, stop_bot
 from app.modules.multibot.polling_manager import PollingManager
-import app.database.requests as rq
 
 from app.modules.multibot.polling_manager import get_polling_manager
 
@@ -36,7 +36,13 @@ async def create_new_bot(request: Request):
         if not all([name, api]):
             raise HTTPException(status_code=400, detail='Incorrect data')
 
-        result = await rq.add_bot(user_id, name, api)
+        # result = await rq.add_bot(user_id, name, api)
+        result = await user_action(
+            tg_id=user_id,
+            action='add_bot',
+            name=name,
+            api=api
+        )
         return JSONResponse(content=result, headers=CORS_HEADERS)
     except Exception as error:
         logger.error(f'Ошибка при обработке запроса от {user_id}: {error}')
@@ -59,7 +65,12 @@ async def delete_bot(
         if not name:
             raise HTTPException(status_code=400, detail='Incorrect data')
 
-        bot_api, bot_on, result = await rq.delete_bot(user_id, name)
+        bot_api, bot_on, result = await user_action(
+            tg_id=user_id,
+            action='delete_bot',
+            name=name
+        )
+
 
         if bot_api and bot_on:
             background_tasks.add_task(stop_bot, bot_api, polling_manager)
@@ -81,7 +92,7 @@ async def get_bot_list(request: Request):
         if not user_id:
             raise HTTPException(status_code=401, detail='Authorization error')
 
-        bot_list = await rq.get_user_bots(user_id)
+        bot_list = await user_action(tg_id=user_id, action='get_bots')
         return JSONResponse(content=bot_list, headers=CORS_HEADERS)
     except Exception as error:
         logger.error(f'Error fetching bot list: {error}')
@@ -104,7 +115,13 @@ async def toggle_bot(
             logger.warning('Отсутствует user_id')
             raise HTTPException(status_code=401, detail='Authorization error')
 
-        result = await rq.user_update_bot(user_id, api, 'status', value == 'on')
+        result = await user_action(
+            tg_id=user_id,
+            action='update_bot',
+            api=api,
+            field='status',
+            value=value == 'on'
+        )
 
         # Запуск действия в фоне, не блокируя ответ клиенту
         if value == 'on':

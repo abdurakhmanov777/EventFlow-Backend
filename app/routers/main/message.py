@@ -3,7 +3,6 @@ from aiogram import Router
 from aiogram import types
 from aiogram.fsm.context import FSMContext
 
-import app.database.requests as rq
 import app.functions.keyboards as kb
 
 from app.utils.logger import log

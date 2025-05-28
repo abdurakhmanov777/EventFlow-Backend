@@ -2,7 +2,7 @@ from typing import Any, Awaitable, Callable
 from aiogram import BaseMiddleware, types, Bot
 from aiogram.fsm.context import FSMContext
 
-import app.database.requests as rq
+from app.database.rq_user import user_action
 from app.modules.localization.localization import load_localization_multibot
 from app.utils.logger import log_error
 
@@ -18,7 +18,9 @@ async def update_fsm_data(
     if 'loc' in user_data:
         return
 
-    lang = user_data.get('lang') or await rq.user_check(user_id, 'lang')
+    lang = user_data.get('lang') or await user_action(
+        tg_id=user_id, action='check', field='lang'
+    )
     loc = await load_localization_multibot(lang)
     bot_id = (await bot.get_me()).id
 

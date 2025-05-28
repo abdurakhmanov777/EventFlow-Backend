@@ -13,8 +13,9 @@ def get_router_message() -> Router:
         data = await state.get_data()
         loc, bot_id = data.get('loc'), data.get('bot_id')
 
-        state_db, msg_id = await rq_user.check_state_and_msg_id(
-            message.from_user.id, bot_id
+        state_db, msg_id = await rq_user.user_bot(
+            tg_id=message.from_user.id,
+            bot_id=bot_id
         )
 
         if getattr(loc, state_db).type != 'input':

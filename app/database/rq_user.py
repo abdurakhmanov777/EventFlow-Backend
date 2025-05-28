@@ -1,63 +1,51 @@
-import asyncio
 from typing import Any
-from app.database.models import Bot, Data, UserBot, async_session
+
 from sqlalchemy import select
+from app.database.managers.data_manager import DataManager
+from app.database.managers.userapp_manager import BotStatusService, UserService
+from app.database.managers.userbot_manager import UserBotManager
+from app.database.models import async_session
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.database.managers.state_manager import StateManager
 
 
-async def new_user_bot(
-    tg_id: int,
-    telegram_bot_id: int,
-    msg_id: int
-) -> tuple[str, int | None] | None:
+async def get_active_bot_apis() -> list[str]:
+    return await BotStatusService.get_active_apis()
+
+async def user_action(tg_id: int, action: str, **kwargs):
     try:
         async with async_session() as session:
-            user_bot = await session.scalar(
-                select(UserBot)
-                .join(Bot)
-                .where(UserBot.tg_id == tg_id, Bot.bot_id == telegram_bot_id)
-            )
-
-            msg_old = None
-
-            if user_bot:
-                msg_old = user_bot.msg_id
-                user_bot.msg_id = msg_id
-            else:
-                bot = await session.scalar(
-                    select(Bot).where(Bot.bot_id == telegram_bot_id)
-                )
-                if not bot:
-                    return
-                user_bot = UserBot(
-                    tg_id=tg_id, bot_id=bot.id, msg_id=msg_id)
-                session.add(user_bot)
-
-            await session.commit()
-            await session.refresh(user_bot)
-
-            return user_bot.state[-1], msg_old
+            service = UserService(session, tg_id)
+            actions = {
+                'new': service.new_user,
+                'update': lambda: service.update_field(kwargs['field'], kwargs['value']),
+                'check': lambda: service.check_field(kwargs['field']),
+                'add_bot': lambda: service.add_bot(kwargs['name'], kwargs['api']),
+                'delete_bot': lambda: service.delete_bot(kwargs['name']),
+                'get_bots': service.get_user_bots,
+                'update_bot': lambda: service.update_bot_field(kwargs['api'], kwargs['field'], kwargs['value'])
+            }
+            func = actions.get(action)
+            return await func() if func else None
     except SQLAlchemyError:
-        return False, False
+        return False
 
 
-async def check_state_and_msg_id(
+async def user_bot(
     tg_id: int,
-    telegram_bot_id: int
-) -> tuple[str, int] | tuple[None, None]:
+    bot_id: int,
+    action: str = 'check',
+    msg_id: int | None = None,
+):
     try:
         async with async_session() as session:
-            user_bot = await session.scalar(
-                select(UserBot)
-                .join(Bot)
-                .where(UserBot.tg_id == tg_id, Bot.bot_id == telegram_bot_id)
-            )
-            if not user_bot:
-                return
-
-            return user_bot.state[-1], user_bot.msg_id
+            ubm = UserBotManager(session, tg_id, bot_id)
+            func = {
+                'upsert': lambda: ubm.upsert_user_bot(msg_id) if msg_id is not None else None,
+                'check': ubm.get_state_and_msg_id,
+            }.get(action)
+            return await func() if func else None
     except SQLAlchemyError:
         return False
 
@@ -84,66 +72,22 @@ async def user_state(
     except SQLAlchemyError:
         return False
 
-
-async def upsert_data(
+async def user_data(
     tg_id: int,
-    telegram_bot_id: int,
-    name: str,
-    value: any
-) -> bool:
+    bot_id: int,
+    action: str = 'get',
+    name: str | None = None,
+    value: Any = None
+):
     try:
         async with async_session() as session:
-            # Получаем UserBot через Bot
-            user_bot = await session.scalar(
-                select(UserBot)
-                .join(Bot)
-                .where(UserBot.tg_id == tg_id, Bot.bot_id == telegram_bot_id)
-            )
+            dm = DataManager(session, tg_id, bot_id)
+            func = {
+                'get': lambda: dm.get(name) if name else None,
+                'upsert': lambda: dm.upsert(name, value) if name and value is not None else None,
+                'delete': lambda: dm.delete(name) if name else None,
+            }.get(action)
 
-            if not user_bot:
-                return False
-
-            # Ищем существующую запись Data с нужным name
-            data_entry = await session.scalar(
-                select(Data)
-                .where(Data.user_bot_id == user_bot.id, Data.name == name)
-            )
-
-            if data_entry:
-                # Обновляем значение
-                data_entry.value = value
-            else:
-                # Добавляем новую запись
-                data_entry = Data(name=name, value=value, user_bot_id=user_bot.id)
-                session.add(data_entry)
-
-            await session.commit()
-            return True
+            return await func() if func else None
     except SQLAlchemyError:
         return False
-
-
-async def get_data_value(
-    tg_id: int,
-    telegram_bot_id: int,
-    name: str
-) -> Any | None:
-    try:
-        async with async_session() as session:
-            user_bot = await session.scalar(
-                select(UserBot)
-                .join(Bot)
-                .where(UserBot.tg_id == tg_id, Bot.bot_id == telegram_bot_id)
-            )
-
-            if not user_bot:
-                return None
-
-            data_entry = await session.scalar(
-                select(Data)
-                .where(Data.user_bot_id == user_bot.id, Data.name == name)
-            )
-
-            return data_entry.value if data_entry else None
-    except SQLAlchemyError:
-        return None

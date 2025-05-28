@@ -1,6 +1,7 @@
 import re
 
-from app.database.managers.data_manager import DataService as user_data
+# from app.database.managers.data_manager import DataService as user_data
+from app.database.rq_user import user_data
 from app.functions import keyboards as kb
 from app.utils.morphology import process_text
 
@@ -20,7 +21,12 @@ async def create_msg(
         keyboard = await kb.multi_select(current.keyboard)
 
     elif msg_type == 'input':
-        user_input = input_data or await user_data.get(tg_id=tg_id, telegram_bot_id=bot_id, name=text)
+        user_input = input_data or await user_data(
+            tg_id=tg_id,
+            bot_id=bot_id,
+            action='get',
+            name=text
+        )
 
         if input_data and not re.fullmatch(current.pattern, input_data):
             err_prefix, err_suffix = loc.template.input.error
@@ -28,7 +34,13 @@ async def create_msg(
 
         if user_input:
             if input_data:
-                await user_data.upsert(tg_id=tg_id, telegram_bot_id=bot_id, name=text, value=input_data)
+                await user_data(
+                    tg_id=tg_id,
+                    bot_id=bot_id,
+                    action='upsert',
+                    name=text,
+                    value=input_data
+                )
 
             saved = loc.template.input.saved
             text_msg = f'{saved[0]}{text}{saved[1]}{user_input}{saved[2]}'
@@ -44,9 +56,10 @@ async def create_msg(
         keyboard = await kb.multi_text(current.keyboard)
 
     if select:
-        await user_data.upsert(
+        await user_data(
             tg_id=tg_id,
-            telegram_bot_id=bot_id,
+            bot_id=bot_id,
+            action='upsert',
             name=getattr(loc, select[1]).text,
             value=select[0]
         )

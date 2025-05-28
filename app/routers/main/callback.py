@@ -1,8 +1,8 @@
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 
+from app.database.rq_user import user_action
 import app.functions.keyboards as kb
-import app.database.requests as rq
 from app.routers.config import CALLBACK_MAIN, CALLBACK_SELECT
 from app.modules.localization.localization import load_localization_main
 from app.utils.logger import log
@@ -65,7 +65,12 @@ async def option(callback: types.CallbackQuery, state: FSMContext):
     try:
         await callback.message.edit_text(text=text, parse_mode='HTML', reply_markup=keyboard)
         await state.update_data(**{key: value})
-        await rq.user_update(callback.from_user.id, key, value)
+        await user_action(
+            tg_id=callback.from_user.id,
+            action='update',
+            field=key,
+            value=value
+        )
     except:
         pass
 

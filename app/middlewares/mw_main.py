@@ -1,7 +1,7 @@
 from typing import Any, Awaitable, Callable
 from aiogram import BaseMiddleware, types
 
-import app.database.requests as rq
+from app.database.rq_user import user_action
 from app.modules.localization.localization import load_localization_main
 from app.utils.logger import log_error
 
@@ -12,7 +12,9 @@ async def update_language_data(event, data: dict) -> dict:
     if 'loc' in user_data:
         return
 
-    lang = user_data.get('lang') or await rq.user_check(event.from_user.id, 'lang')
+    lang = user_data.get('lang') or await user_action(
+        tg_id=event.from_user.id, action='check', field='lang'
+    )
     await state.update_data(
         lang=lang,
         loc=await load_localization_main(lang)

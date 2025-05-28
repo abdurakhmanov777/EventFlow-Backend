@@ -1,87 +1,60 @@
 from typing import Any
 from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
-from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from app.database.models import Bot, UserBot, Data
 
-from app.database.models import async_session, UserBot, Bot, Data
 
+class DataManager:
+    def __init__(self, session: AsyncSession, tg_id: int, bot_id: int):
+        self.session = session
+        self.tg_id = tg_id
+        self.bot_id = bot_id
 
-class DataService:
-    '''Сервис для управления данными пользователя (таблица Data).'''
-
-    @staticmethod
-    async def _get_user_bot(session, tg_id: int, telegram_bot_id: int) -> UserBot | None:
-        '''Вспомогательный метод для получения объекта UserBot.'''
-        return await session.scalar(
+    async def _get_user_bot(self) -> UserBot | None:
+        stmt = (
             select(UserBot)
+            .options(selectinload(UserBot.data_entries))
             .join(Bot)
-            .where(UserBot.tg_id == tg_id, Bot.bot_id == telegram_bot_id)
+            .where(UserBot.tg_id == self.tg_id, Bot.bot_id == self.bot_id)
         )
+        return await self.session.scalar(stmt)
 
-    @classmethod
-    async def upsert(cls, tg_id: int, telegram_bot_id: int, name: str, value: any) -> bool:
-        '''Добавляет или обновляет запись в таблице Data.'''
-        try:
-            async with async_session() as session:
-                user_bot = await cls._get_user_bot(session, tg_id, telegram_bot_id)
-                if not user_bot:
-                    logger.warning(f'UserBot not found for tg_id={tg_id}, bot_id={telegram_bot_id}')
-                    return False
-
-                data_entry = await session.scalar(
-                    select(Data)
-                    .where(Data.user_bot_id == user_bot.id, Data.name == name)
-                )
-
-                if data_entry:
-                    data_entry.value = value
-                else:
-                    session.add(Data(name=name, value=value, user_bot_id=user_bot.id))
-
-                await session.commit()
-                return True
-        except SQLAlchemyError as e:
-            logger.error(f'Ошибка при upsert в Data: {e}')
-            return False
-
-    @classmethod
-    async def get(cls, tg_id: int, telegram_bot_id: int, name: str) -> Any | None:
-        '''Получает значение из таблицы Data по ключу name.'''
-        try:
-            async with async_session() as session:
-                user_bot = await cls._get_user_bot(session, tg_id, telegram_bot_id)
-                if not user_bot:
-                    return None
-
-                data_entry = await session.scalar(
-                    select(Data)
-                    .where(Data.user_bot_id == user_bot.id, Data.name == name)
-                )
-
-                return data_entry.value if data_entry else None
-        except SQLAlchemyError as e:
-            logger.error(f'Ошибка при получении Data: {e}')
+    async def get(self, name: str) -> Any | None:
+        user_bot = await self._get_user_bot()
+        if not user_bot:
             return None
+        stmt = select(Data).where(Data.user_bot_id == user_bot.id, Data.name == name)
+        data_entry = await self.session.scalar(stmt)
+        return data_entry.value if data_entry else None
 
-    @classmethod
-    async def delete(cls, tg_id: int, telegram_bot_id: int, name: str) -> bool:
-        '''Удаляет запись из таблицы Data по ключу name.'''
-        try:
-            async with async_session() as session:
-                user_bot = await cls._get_user_bot(session, tg_id, telegram_bot_id)
-                if not user_bot:
-                    return False
-
-                data_entry = await session.scalar(
-                    select(Data)
-                    .where(Data.user_bot_id == user_bot.id, Data.name == name)
-                )
-
-                if data_entry:
-                    await session.delete(data_entry)
-                    await session.commit()
-                    return True
-                return False
-        except SQLAlchemyError as e:
-            logger.error(f'Ошибка при удалении Data: {e}')
+    async def upsert(self, name: str, value: Any) -> bool:
+        user_bot = await self._get_user_bot()
+        if not user_bot:
             return False
+
+        stmt = select(Data).where(Data.user_bot_id == user_bot.id, Data.name == name)
+        data_entry = await self.session.scalar(stmt)
+
+        if data_entry:
+            data_entry.value = value
+        else:
+            self.session.add(Data(name=name, value=value, user_bot_id=user_bot.id))
+
+        await self.session.commit()
+        return True
+
+    async def delete(self, name: str) -> bool:
+        user_bot = await self._get_user_bot()
+        if not user_bot:
+            return False
+
+        stmt = select(Data).where(Data.user_bot_id == user_bot.id, Data.name == name)
+        data_entry = await self.session.scalar(stmt)
+
+        if data_entry:
+            await self.session.delete(data_entry)
+            await self.session.commit()
+            return True
+
+        return False
