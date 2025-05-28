@@ -14,8 +14,9 @@
             "start": [
                 [
                     [
-                        "MiniApp",
-                        "miniapp"
+                        "Open MiniApp",
+                        "webapp",
+                        "https://lh7fk1md-5500.euw.devtunnels.ms/"
                     ]
                 ],
                 [
@@ -53,21 +54,6 @@
                     "settings"
                 ]
             ],
-            "miniapp": [
-                [
-                    [
-                        "Open MiniApp",
-                        "webapp",
-                        "https://abdurakhmanov777.github.io/EventFlow-Frontend/"
-                    ]
-                ],
-                [
-                    [
-                        "Back",
-                        "start"
-                    ]
-                ]
-            ],
             "test": [
                 [
                     [
@@ -78,8 +64,8 @@
                 ],
                 [
                     [
-                        "Back",
-                        "start"
+                        "Settings",
+                        "settings"
                     ]
                 ]
             ],

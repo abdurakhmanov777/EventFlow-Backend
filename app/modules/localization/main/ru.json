@@ -14,8 +14,9 @@
             "start": [
                 [
                     [
-                        "Мини-приложение",
-                        "miniapp"
+                        "Открыть мини-приложение",
+                        "webapp",
+                        "https://abdurakhmanov777.github.io/EventFlow-Frontend/"
                     ]
                 ],
                 [
@@ -53,21 +54,6 @@
                     "settings"
                 ]
             ],
-            "miniapp": [
-                [
-                    [
-                        "Открыть мини-приложение",
-                        "webapp",
-                        "https://abdurakhmanov777.github.io/EventFlow-Frontend/"
-                    ]
-                ],
-                [
-                    [
-                        "Назад",
-                        "start"
-                    ]
-                ]
-            ],
             "test": [
                 [
                     [
@@ -78,8 +64,8 @@
                 ],
                 [
                     [
-                        "Назад",
-                        "start"
+                        "Настройки",
+                        "settings"
                     ]
                 ]
             ],
