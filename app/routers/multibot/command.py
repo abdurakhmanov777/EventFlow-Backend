@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from app.functions.keyboards import help
 from app.modules.multibot.multi_handler import create_msg
 from app.utils.logger import log
-from app.database import rq_user
+from app.database.requests import user_bot
 
 
 def get_router_command() -> Router:
@@ -17,7 +17,7 @@ def get_router_command() -> Router:
         data = await state.get_data()
         loc, bot_id = data.get('loc'), data.get('bot_id')
 
-        state_db, msg_id = await rq_user.user_bot(
+        state_db, msg_id = await user_bot(
             tg_id=message.from_user.id,
             bot_id=bot_id,
             action='upsert',

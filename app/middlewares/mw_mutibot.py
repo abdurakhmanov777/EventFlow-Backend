@@ -2,7 +2,7 @@ from typing import Any, Awaitable, Callable
 from aiogram import BaseMiddleware, types, Bot
 from aiogram.fsm.context import FSMContext
 
-from app.database.rq_user import user_action
+from app.database.requests import user_action
 from app.modules.localization.localization import load_localization_multibot
 from app.utils.logger import log_error
 

@@ -1,7 +1,7 @@
 from typing import Any, Awaitable, Callable
 from aiogram import BaseMiddleware, types
 
-from app.database.rq_user import user_action
+from app.database.requests import user_action
 from app.modules.localization.localization import load_localization_main
 from app.utils.logger import log_error
 
