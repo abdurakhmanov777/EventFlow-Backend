@@ -2,7 +2,6 @@ import json
 import os
 
 from loguru import logger
-# from aiogram.fsm.context import FSMContext
 
 class Localization:
     def __init__(self, localization_data: dict):

@@ -4,7 +4,7 @@ from loguru import logger
 from fastapi import Depends
 
 from app.database.requests import user_action
-from app.modules.multibot.bot_manager import start_bot, stop_bot
+from app.modules.multibot.multibot_manager import start_bot, stop_bot
 from app.modules.multibot.polling_manager import PollingManager
 
 from app.modules.multibot.polling_manager import get_polling_manager
