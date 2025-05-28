@@ -2,7 +2,7 @@ import re
 
 # from app.database.managers.data_manager import DataService as user_data
 from app.database.requests import user_data
-from app.functions import keyboards as kb
+from app.modules.keyboards import keyboards as kb
 from app.utils.morphology import process_text
 
 async def create_msg(

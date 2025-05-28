@@ -2,7 +2,7 @@ from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 
 from app.database.requests import user_action
-import app.functions.keyboards as kb
+import app.modules.keyboards.keyboards as kb
 from app.routers.config import CALLBACK_MAIN, CALLBACK_SELECT
 from app.modules.localization.localization import load_localization_main
 from app.utils.logger import log

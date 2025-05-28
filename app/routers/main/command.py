@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from app.routers.config import COMMAND_MAIN
-from app.functions import keyboards as kb
+from app.modules.keyboards import keyboards as kb
 from app.utils.logger import log
 
 router = Router()

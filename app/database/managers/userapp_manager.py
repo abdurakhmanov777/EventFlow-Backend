@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from app.database.models import UserApp, Bot, UserBot, Data, async_session
 from aiogram import Bot as Bot_aiogram
-from app.functions.commands import multibot_commands
+from app.modules.keyboards.commands import multibot_commands
 import asyncio
 
 
@@ -145,4 +145,3 @@ class BotStatusService:
             query = select(Bot.api).where(Bot.status == True)
             result = await session.execute(query)
             return result.scalars().all()
-

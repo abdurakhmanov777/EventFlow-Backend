@@ -3,7 +3,7 @@ from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
-from app.functions.keyboards import help
+from app.modules.keyboards.keyboards import help
 from app.modules.multibot.multi_handler import create_msg
 from app.utils.logger import log
 from app.database.requests import user_bot

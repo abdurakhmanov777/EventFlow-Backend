@@ -4,7 +4,7 @@ from aiogram import Bot
 from app.routers.__init_http__ import init_routers as init_routers_http
 from app.database.models import async_main
 from app.database.requests import get_active_bot_apis
-from app.functions.commands import bot_commands
+from app.modules.keyboards.commands import bot_commands
 from app.modules.multibot.bot_manager import start_multiple_bots
 from app.modules.multibot.polling_manager import get_polling_manager
 from app.routers.__init_bot__ import init_routers
