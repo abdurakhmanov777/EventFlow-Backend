@@ -1,9 +1,10 @@
-from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
-from app.database.models import UserApp, Bot, UserBot, Data, async_session
-from aiogram import Bot as Bot_aiogram
-from app.modules.keyboards.commands import multibot_commands
 import asyncio
+
+from aiogram import Bot as Bot_aiogram
+from sqlalchemy import select
+
+from app.database.models import Bot, Data, UserApp, UserBot, async_session
+from app.modules.keyboards.commands import multibot_commands
 
 
 class UserService:

@@ -1,8 +1,11 @@
 from typing import Any
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from app.database.models import Bot, UserBot, Data
+
+from app.database.models import Bot, Data, UserBot
+
 
 
 class DataManager:

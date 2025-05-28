@@ -1,6 +1,5 @@
 from typing import Any
 
-from sqlalchemy import select
 from app.database.managers.data_manager import DataManager
 from app.database.managers.userapp_manager import BotStatusService, UserService
 from app.database.managers.userbot_manager import UserBotManager

@@ -1,7 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
+
 from app.database.models import Bot, UserBot
+
 
 class StateManager:
     def __init__(self, session: AsyncSession, tg_id: int, bot_id: int):

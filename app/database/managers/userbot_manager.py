@@ -1,9 +1,8 @@
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.models import UserBot, Bot
-
+from app.database.models import Bot, UserBot
 
 
 class UserBotManager:
