@@ -115,19 +115,24 @@ async def toggle_bot(
             logger.warning('Отсутствует user_id')
             raise HTTPException(status_code=401, detail='Authorization error')
 
+        # Запуск действия в фоне, не блокируя ответ клиенту
+        is_turning_on = value == 'on'
+        is_running = polling_manager.is_bot_running(api)
+
+        if is_turning_on and not is_running:
+            background_tasks.add_task(start_bot, api, polling_manager)
+        elif not is_turning_on and is_running:
+            background_tasks.add_task(stop_bot, api, polling_manager)
+        else:
+            return
+
         result = await user_action(
             tg_id=user_id,
             action='update_bot',
             api=api,
             field='status',
-            value=value == 'on'
+            value=is_turning_on
         )
-
-        # Запуск действия в фоне, не блокируя ответ клиенту
-        if value == 'on':
-            background_tasks.add_task(start_bot, api, polling_manager)
-        else:
-            background_tasks.add_task(stop_bot, api, polling_manager)
 
         return JSONResponse(content=result, headers=CORS_HEADERS)
 

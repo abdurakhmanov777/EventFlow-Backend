@@ -1,31 +1,28 @@
 import asyncio
-from asyncio import CancelledError, Task, get_running_loop
-from contextvars import Context
+from asyncio import Task
 from typing import Any, Awaitable, Dict, List, Optional
-import logging
+from loguru import logger
 
 from aiogram import Bot
 from aiogram.types import User
 from aiogram.dispatcher.dispatcher import DEFAULT_BACKOFF_CONFIG, Dispatcher
 from aiogram.utils.backoff import BackoffConfig
 
-logger = logging.getLogger(__name__)
-
-
 class PollingManager:
     def __init__(self):
-        self.tasks: Dict[int, Task] = {}
+        self.tasks: Dict[str, Task] = {}
+        self.api_to_bot_id: Dict[str, int] = {}
 
     def active_bots_count(self) -> int:
         return len(self.tasks)
 
-    def active_bot_ids(self) -> List[int]:
-        return list(self.tasks)
+    def active_api_tokens(self) -> List[str]:
+        return list(self.tasks.keys())
 
     def start_bot_polling(
         self,
         dp: Dispatcher,
-        bot: Bot,
+        api_token: str,
         polling_timeout: int = 10,
         handle_as_tasks: bool = True,
         backoff_config: BackoffConfig = DEFAULT_BACKOFF_CONFIG,
@@ -34,22 +31,28 @@ class PollingManager:
         on_bot_shutdown: Optional[Awaitable] = None,
         **kwargs: Any,
     ):
-        loop = get_running_loop()
-        loop.call_soon(
-            lambda: asyncio.create_task(
-                self._run_polling(
-                    dp, bot, polling_timeout, handle_as_tasks,
-                    backoff_config, allowed_updates,
-                    on_bot_startup, on_bot_shutdown, **kwargs
-                )
-            ),
-            context=Context(),
+        if self.is_bot_running(api_token):
+            return
+
+        task = asyncio.create_task(
+            self._run_polling(
+                dp=dp,
+                api_token=api_token,
+                polling_timeout=polling_timeout,
+                handle_as_tasks=handle_as_tasks,
+                backoff_config=backoff_config,
+                allowed_updates=allowed_updates,
+                on_bot_startup=on_bot_startup,
+                on_bot_shutdown=on_bot_shutdown,
+                **kwargs
+            )
         )
+        self.tasks[api_token] = task
 
     async def _run_polling(
         self,
         dp: Dispatcher,
-        bot: Bot,
+        api_token: str,
         polling_timeout: int,
         handle_as_tasks: bool,
         backoff_config: BackoffConfig,
@@ -58,16 +61,16 @@ class PollingManager:
         on_bot_shutdown: Optional[Awaitable],
         **kwargs: Any,
     ):
-        logger.info('Starting polling...')
-        user: User = await bot.me()
+        async with Bot(api_token) as bot:
+            try:
+                await bot.delete_webhook(drop_pending_updates=False)
+                user: User = await bot.me()
+                self.api_to_bot_id[api_token] = user.id
 
-        if on_bot_startup:
-            await on_bot_startup
+                if on_bot_startup:
+                    await on_bot_startup
 
-        try:
-            logger.info('Polling bot @%s (id=%d, name=%r)', user.username, bot.id, user.full_name)
-            task = asyncio.create_task(
-                dp._polling(
+                await dp._polling(
                     bot=bot,
                     handle_as_tasks=handle_as_tasks,
                     polling_timeout=polling_timeout,
@@ -75,23 +78,24 @@ class PollingManager:
                     allowed_updates=allowed_updates,
                     **kwargs,
                 )
-            )
-            self.tasks[bot.id] = task
-            await task
-        except CancelledError:
-            logger.info('Polling task was cancelled')
-        finally:
-            logger.info('Stopped polling bot @%s (id=%d)', user.username, bot.id)
-            if on_bot_shutdown:
-                await on_bot_shutdown
-            await bot.session.close()
-            self.tasks.pop(bot.id, None)
 
-    def stop_bot_polling(self, bot_id: int):
+            except Exception as error:
+                logger.exception(f'Unexpected error in polling task for token {api_token}: {error}')
 
-        task = self.tasks.pop(bot_id, None)
-        if task:
+            finally:
+                if on_bot_shutdown:
+                    await on_bot_shutdown
+                self.tasks.pop(api_token, None)
+                self.api_to_bot_id.pop(api_token, None)
+
+    def stop_bot_polling(self, api_token: str):
+        task = self.tasks.get(api_token)
+        if task and not task.done():
             task.cancel()
+
+    def is_bot_running(self, api_token: str) -> bool:
+        task = self.tasks.get(api_token)
+        return task is not None and not task.done()
 
 
 polling_manager = PollingManager()
