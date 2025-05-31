@@ -4,7 +4,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from app.modules.keyboards.keyboards import help
-from app.modules.multibot.multi_handler import create_msg
+from app.modules.multibot.multi_handler import create_msg, data_output
 from app.utils.logger import log
 from app.database.requests import user_bot
 
@@ -16,17 +16,24 @@ def get_router_command() -> Router:
     async def multi_cmd(message: Message, state: FSMContext):
         data = await state.get_data()
         loc, bot_id = data.get('loc'), data.get('bot_id')
+        tg_id = message.from_user.id
 
         state_db, msg_id = await user_bot(
-            tg_id=message.from_user.id,
+            tg_id=tg_id,
             bot_id=bot_id,
             action='upsert',
             msg_id=message.message_id+1
         )
 
-        text_msg, keyboard = await create_msg(
-            loc, state_db, message.from_user.id, bot_id
-        )
+        if state_db == '99':
+            text_msg, keyboard = await data_output(
+                tg_id, bot_id, loc
+            )
+        else:
+            text_msg, keyboard = await create_msg(
+                loc, state_db, tg_id, bot_id
+            )
+
         await message.answer(
             text=text_msg,
             parse_mode='HTML',

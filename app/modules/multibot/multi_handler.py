@@ -1,7 +1,7 @@
 import re
 
 # from app.database.managers.data_manager import DataService as user_data
-from app.database.requests import user_data
+from app.database.requests import user_data, user_state
 from app.modules.keyboards import keyboards as kb
 from app.utils.morphology import process_text
 
@@ -65,3 +65,38 @@ async def create_msg(
         )
 
     return text_msg, keyboard
+
+
+async def data_output(
+    tg_id: int,
+    bot_id: int,
+    loc
+):
+    states = await user_state(tg_id, bot_id, 'get')
+
+    exclude = {'1', '99'}
+    states = [s for s in states if s not in exclude]
+
+    result = {
+        getattr(loc, state).text: await user_data(tg_id, bot_id, name=getattr(loc, state).text)
+        for state in states
+    }
+
+    items = '\n\n'.join(f'🔹️ {key}: {value}' for key, value in result.items())
+    text_msg = (
+        '<b><u>Проверьте свои данные</u></b>\n\n'
+        f'<blockquote>{items}</blockquote>\n\n'
+        '<i>Если всё верно, отправляйте данные для завершения регистрации.</i>'
+    )
+
+    return text_msg, kb.state_99
+
+
+async def data_sending(
+    tg_id: int,
+    bot_id: int,
+    loc
+):
+
+    text_msg = '100'
+    return text_msg, None
