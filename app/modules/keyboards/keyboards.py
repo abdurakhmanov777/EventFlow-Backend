@@ -11,8 +11,8 @@ help = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(
 
 state_99 = InlineKeyboardMarkup(
     inline_keyboard=[
-        # [InlineKeyboardButton(text='Отправить данные', callback_data=f'userstate{SYMB}100')],
-        [InlineKeyboardButton(text='Отправить данные', callback_data=f'userstate_100')],
+        [InlineKeyboardButton(text='Отправить данные', callback_data=f'userstate{SYMB}100')],
+        # [InlineKeyboardButton(text='Отправить данные', callback_data=f'userstate_100')],
         [InlineKeyboardButton(text='Назад', callback_data='userback')]
     ]
 )

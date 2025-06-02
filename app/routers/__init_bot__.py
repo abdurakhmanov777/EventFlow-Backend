@@ -10,7 +10,7 @@ from app.routers.multibot.callback import get_router_callback
 from app.routers.multibot.message import get_router_message
 
 from app.middlewares.mw_main import MwCommand, MwMessage, MwCallback
-from app.middlewares.mw_mutibot import MwCommand_multi, MwMessage_multi, MwCallback_multi
+from app.middlewares.mw_mutibot import MwCommandMulti, MwMessageMulti, MwCallbackMulti
 from app.modules.multibot.polling_manager import get_polling_manager
 
 
@@ -40,9 +40,9 @@ def create_router() -> Dispatcher:
     router_message = get_router_message()
 
     _apply_middlewares({
-        router_command.message: MwCommand_multi(),
-        router_callback.callback_query: MwCallback_multi(),
-        router_message.message: MwMessage_multi(),
+        router_command.message: MwCommandMulti(),
+        router_callback.callback_query: MwCallbackMulti(),
+        router_message.message: MwMessageMulti(),
     })
 
     dp.include_routers(router_command, router_callback, router_message)

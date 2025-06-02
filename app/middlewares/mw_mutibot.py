@@ -13,106 +13,83 @@ async def update_fsm_data(
     user_id: int,
     extra_data: dict = None
 ) -> None:
-    user_data = await state.get_data()
-
-    if 'loc' in user_data:
+    data = await state.get_data()
+    if 'loc' in data:
         return
 
-    lang = user_data.get('lang') or await user_action(
-        tg_id=user_id, action='check', field='lang'
-    )
+    lang = data.get('lang') or await user_action(tg_id=user_id, action='check', field='lang')
     loc = await load_localization_multibot(lang)
     bot_id = (await bot.get_me()).id
 
-    update = {
-        'lang': lang,
-        'loc': loc,
-        'bot_id': bot_id
-    }
-
-    if extra_data:
-        update.update(extra_data)
-
-    await state.update_data(**update)
+    await state.update_data(lang=lang, loc=loc, bot_id=bot_id, **(extra_data or {}))
 
 
-class MwCommand_multi(BaseMiddleware):
-    def __init__(self) -> None:
-        self.counter = 0
+async def safe_delete(message: types.Message):
+    try:
+        await message.delete()
+    except Exception:
+        pass
 
+
+async def safe_delete_by_id(bot: Bot, chat_id: int, message_id: int):
+    try:
+        await bot.delete_message(chat_id, message_id)
+    except Exception:
+        pass
+
+
+class MwCommandMulti(BaseMiddleware):
     async def __call__(
         self,
         handler: Callable[[types.Message, dict], Awaitable[Any]],
         event: types.Message,
         data: dict
     ) -> Any:
-
-        bot: Bot = data.get('bot')
-        state: FSMContext = data.get('state')
-
         try:
-            await update_fsm_data(bot, state, event.from_user.id)
+            if event.content_type != types.ContentType.TEXT:
+                await safe_delete(event)
+                return
+            await update_fsm_data(data['bot'], data['state'], event.from_user.id)
             result = await handler(event, data)
-
-            try:
-                await event.delete()
-            except Exception:
-                pass
+            await safe_delete(event)
 
             if result:
-                try:
-                    await event.bot.delete_message(event.chat.id, result)
-                except:
-                    pass
-        except Exception as error:
-            await log_error(event, error=error)
-
-
-class MwMessage_multi(BaseMiddleware):
-    def __init__(self) -> None:
-        self.counter = 0
-
-    async def __call__(
-        self,
-        handler: Callable[[types.Message, dict], Awaitable[Any]],
-        event: types.Message,
-        data: dict
-    ) -> Any:
-
-        bot: Bot = data.get('bot')
-        state: FSMContext = data.get('state')
-
-        try:
-            await update_fsm_data(bot, state, event.from_user.id)
-            result = await handler(event, data)
-
-            try:
-                await event.delete()
-            except Exception:
-                pass
+                await safe_delete_by_id(event.bot, event.chat.id, result)
 
             return result
         except Exception as error:
             await log_error(event, error=error)
 
 
-class MwCallback_multi(BaseMiddleware):
-    def __init__(self) -> None:
-        self.counter = 0
+class MwMessageMulti(BaseMiddleware):
+    async def __call__(
+        self,
+        handler: Callable[[types.Message, dict], Awaitable[Any]],
+        event: types.Message,
+        data: dict
+    ) -> Any:
+        if event.content_type != types.ContentType.TEXT:
+            await safe_delete(event)
+            return
 
+        try:
+            await update_fsm_data(data['bot'], data['state'], event.from_user.id)
+            result = await handler(event, data)
+            await safe_delete(event)
+            return result
+        except Exception as error:
+            await log_error(event, error=error)
+
+
+class MwCallbackMulti(BaseMiddleware):
     async def __call__(
         self,
         handler: Callable[[types.CallbackQuery, dict], Awaitable[Any]],
         event: types.CallbackQuery,
         data: dict
     ) -> Any:
-
-        bot: Bot = data.get('bot')
-        state: FSMContext = data.get('state')
-
         try:
-            await update_fsm_data(bot, state, event.from_user.id)
-            result = await handler(event, data)
-            return result
+            await update_fsm_data(data['bot'], data['state'], event.from_user.id)
+            return await handler(event, data)
         except Exception as error:
             await log_error(event, error=error)

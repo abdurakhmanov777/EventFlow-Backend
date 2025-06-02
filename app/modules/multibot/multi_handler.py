@@ -1,9 +1,12 @@
 import re
+from aiogram.enums import ChatAction
+from aiogram.types import CallbackQuery, Message, BufferedInputFile
 
-# from app.database.managers.data_manager import DataService as user_data
-from app.database.requests import user_data, user_state
+from app.database.requests import user_bot, user_data, user_state
+from app.modules.generator.main import create_text_image
 from app.modules.keyboards import keyboards as kb
 from app.utils.morphology import process_text
+
 
 async def create_msg(
     loc,
@@ -92,11 +95,50 @@ async def data_output(
     return text_msg, kb.state_99
 
 
+from aiogram.types import CallbackQuery, Message
+from aiogram.enums import ChatAction
+from aiogram.types.input_file import BufferedInputFile
+from io import BytesIO
+
 async def data_sending(
     tg_id: int,
     bot_id: int,
-    loc
+    event: CallbackQuery | Message,
 ):
+    # Определим бота и объект message вне зависимости от типа события
+    bot = event.bot if isinstance(event, CallbackQuery) else event.bot
+    message = event.message if isinstance(event, CallbackQuery) else event
 
-    text_msg = '100'
-    return text_msg, None
+    await bot.send_chat_action(chat_id=tg_id, action=ChatAction.UPLOAD_PHOTO)
+
+    code = '1'
+    try:
+        buffer = await create_text_image(code)
+
+        caption = (
+            f'<b>Код участника: {code}</b>\n\n'
+            '<i>Жди подтверждения участия, которое придёт ближе к дате мероприятия!</i>'
+        )
+
+        msg = await message.answer_photo(
+            photo=BufferedInputFile(buffer.read(), filename="code.png"),
+            caption=caption,
+            parse_mode='HTML'
+        )
+
+        await bot.pin_chat_message(
+            chat_id=message.chat.id,
+            message_id=msg.message_id
+        )
+
+        await user_bot(tg_id=tg_id, bot_id=bot_id, action='upsert', msg_id=msg.message_id)
+
+    except Exception as e:
+        # Временно можно добавить print для отладки
+        print(f"Ошибка в data_sending: {e}")
+
+    finally:
+        try:
+            await message.delete()
+        except:
+            pass  # Сообщение могло быть уже удалено или не поддерживает удаление

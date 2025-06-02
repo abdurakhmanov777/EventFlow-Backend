@@ -6,6 +6,7 @@ from app.modules.multibot.multi_handler import create_msg, data_output, data_sen
 from app.utils.logger import log
 from config import SYMB
 
+
 def get_router_callback() -> Router:
     router = Router()
 
@@ -15,29 +16,29 @@ def get_router_callback() -> Router:
 
         await log(callback)
 
-
     @router.callback_query(lambda c: f'userstate{SYMB}' in c.data)
     async def multi_clbk(callback: CallbackQuery, state: FSMContext):
         data = await state.get_data()
         loc, bot_id = data.get('loc'), data.get('bot_id')
         tg_id = callback.from_user.id
         _, next_state, *rest = callback.data.split(SYMB)
+
         back_state = await user_state(
             tg_id, bot_id, 'peekpush', next_state
         )
-
-        if next_state == '99':
+        if next_state == '100':
+            await data_sending(
+                tg_id, bot_id, callback
+            )
+            return
+        elif next_state == '99':
             text_msg, keyboard = await data_output(
                 tg_id, bot_id, loc
             )
 
-        # elif next_state == '100':
-        #     text_msg, keyboard = await data_sending(
-        #         tg_id, bot_id, loc
-        #     )
-
         else:
-            select_param = (rest[0], back_state) if (rest and rest[1] == 'True') else None
+            select_param = (rest[0], back_state) if (
+                rest and rest[1] == 'True') else None
 
             text_msg, keyboard = await create_msg(
                 loc, next_state, tg_id, bot_id, select=select_param

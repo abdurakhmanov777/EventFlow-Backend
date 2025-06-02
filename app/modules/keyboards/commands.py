@@ -12,6 +12,7 @@ async def bot_commands(bot: Bot):
 async def multibot_commands(bot: Bot):
     commands = [
         BotCommand(command="start", description="Запуск/перезапуск бота"),
+        BotCommand(command="cancel", description="Отмена регистрации"),
         BotCommand(command="help", description="Контакты администратора"),
     ]
     await bot.set_my_commands(commands)

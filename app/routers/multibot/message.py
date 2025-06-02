@@ -5,6 +5,7 @@ from app.modules.multibot.multi_handler import create_msg
 from app.utils.logger import log
 from app.database.requests import user_bot
 
+
 def get_router_message() -> Router:
     router = Router()
 
@@ -15,11 +16,13 @@ def get_router_message() -> Router:
 
         state_db, msg_id = await user_bot(
             tg_id=message.from_user.id,
-            bot_id=bot_id
+            bot_id=bot_id,
+            attrs=['state', 'msg_id']
         )
 
-        if getattr(loc, state_db).type != 'input':
+        if not (loc and (attr := getattr(loc, state_db, None)) and attr.type == 'input'):
             return
+
 
         text_msg, keyboard = await create_msg(
             loc, state_db, message.from_user.id, bot_id, input_data=message.text

@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -61,3 +61,13 @@ class DataManager:
             return True
 
         return False
+
+    async def delete_all(self) -> bool:
+        user_bot = await self._get_user_bot()
+        if not user_bot:
+            return False
+
+        stmt = delete(Data).where(Data.user_bot_id == user_bot.id)
+        await self.session.execute(stmt)
+        await self.session.commit()
+        return True

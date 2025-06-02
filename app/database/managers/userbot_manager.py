@@ -1,3 +1,4 @@
+from typing import Any
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -48,11 +49,24 @@ class UserBotManager:
         except SQLAlchemyError:
             return False, False
 
-    async def get_state_and_msg_id(self) -> tuple[str, int] | tuple[None, None] | bool:
+    async def get_user_bot_attrs(
+        self,
+        *attrs: str
+    ) -> tuple[Any, ...] | tuple[None, ...] | bool:
         try:
             user_bot = await self._get_user_bot()
             if not user_bot:
-                return None, None
-            return user_bot.state[-1], user_bot.msg_id
+                return tuple(None for _ in attrs)
+
+            results = []
+            for attr in attrs:
+                if attr == "state":
+                    value = user_bot.state[-1] if user_bot.state else None
+                else:
+                    value = getattr(user_bot, attr, None)
+                results.append(value)
+
+            return tuple(results)
+
         except SQLAlchemyError:
             return False

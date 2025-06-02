@@ -37,17 +37,19 @@ async def user_bot(
     bot_id: int,
     action: str = 'check',
     msg_id: int | None = None,
+    attrs: list[str] | None = None,
 ):
     try:
         async with async_session() as session:
             ubm = UserBotManager(session, tg_id, bot_id)
             func = {
                 'upsert': lambda: ubm.upsert_user_bot(msg_id) if msg_id is not None else None,
-                'check': ubm.get_state_and_msg_id,
+                'check': lambda: ubm.get_user_bot_attrs(*attrs),
             }.get(action)
             return await func() if func else None
     except SQLAlchemyError:
         return False
+
 
 
 async def user_state(
@@ -88,6 +90,7 @@ async def user_data(
                 'get': lambda: dm.get(name) if name else None,
                 'upsert': lambda: dm.upsert(name, value) if name and value is not None else None,
                 'delete': lambda: dm.delete(name) if name else None,
+                'delete_all': lambda: dm.delete_all(),
             }.get(action)
 
             return await func() if func else None
